@@ -1,38 +1,13 @@
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jordis' Grid</title>
-    <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            display: grid;
-            #grid-template-columns: repeat(2, 50%); 
-			grid-template-columns: repeat(3, 33.33%);
-            grid-template-rows: repeat(2, 50%);
-            height: 100%;
-        }
-        .video {
-            width: 100%;
-            height: 100%;
-        }
-    </style>	
-</head>
-<body>
-    <div class="container">
-	<!--fff -->
-    	<iframe class="video" src="https://www.youtube.com/embed/LY2XEQ_SSXA?mute=1" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>    	
-	<iframe class="video" src="https://www.youtube.com/embed/cb12KmMMDJA?mute=1" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>	
-	<iframe class="video" src="https://www.youtube.com/embed/70GirogAfHQ?mute=1" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-	<iframe class="video" src="https://www.youtube.com/embed/KCIwicDYO9I?mute=1" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-	<iframe class="video" src="" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen ></iframe>
-    	<iframe class="video" src="https://www.youtube.com/embed/avly0uwZzOE?mute=1" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-     
-
-    </div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React + TS</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
