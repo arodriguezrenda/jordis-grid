@@ -20,36 +20,19 @@
             width: 100%;
             height: 100%;
         }
-    </style>
-	<script src="https://www.youtube.com/player_api"></script>
-	<script>
-    function onYouTubePlayerAPIReady() {
-        const players = document.querySelectorAll('.video');
-	    console.log(players);
-        players.forEach(player => {
-            new YT.Player(player, {
-                videoId: player.dataset.videoId,
-                playerVars: {
-                    autoplay: 1,
-                    mute: 1
-                }
-            });
-        });
-    }
-</script>
-
+    </style>	
 </head>
 <body>
     <div class="container">
-	<!--<iframe class="video" src="https://www.youtube.com/embed/LY2XEQ_SSXA?mute=1" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>    	
+	<!--fff -->
+    	<iframe class="video" src="https://www.youtube.com/embed/LY2XEQ_SSXA?mute=1" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>    	
 	<iframe class="video" src="https://www.youtube.com/embed/cb12KmMMDJA?mute=1" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>	
 	<iframe class="video" src="https://www.youtube.com/embed/70GirogAfHQ?mute=1" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 	<iframe class="video" src="https://www.youtube.com/embed/KCIwicDYO9I?mute=1" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-	<iframe class="video" src="https://www.youtube.com/embed/LY2XEQ_SSXA?autoplay=1&mute=1" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen ></iframe>
+	<iframe class="video" src="" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen ></iframe>
     	<iframe class="video" src="https://www.youtube.com/embed/avly0uwZzOE?mute=1" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-     fff -->
-	        <div id="player1" class="video" data-video-id="LY2XEQ_SSXA"></div>
-   		<div id="player2" class="video" data-video-id="cb12KmMMDJA"></div>
+     
+
     </div>
 </body>
 </html>
