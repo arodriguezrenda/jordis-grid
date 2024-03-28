@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import './App.css';
-import logo from '../public/jordan.svg';
 
 interface DolarBlue {
   compra: number,
@@ -52,7 +51,7 @@ const App: React.FC = () => {
         <iframe className="video" src="https://www.youtube.com/embed/70GirogAfHQ?mute=1&enablejsapi=1&autoplay=1" frameBorder="0" allowFullScreen></iframe>
         <iframe className="video" src="https://www.youtube.com/embed/KCIwicDYO9I?mute=1&enablejsapi=1&autoplay=1" frameBorder="0" allowFullScreen></iframe>
         {dolarData && (
-          <div className="dolar-info" style={{ backgroundImage: `url(${logo})` }}>
+          <div className="dolar-info">
             <p>Dolar Blue</p>
             <p>Fecha de actualización: {dolarData.fechaActualizacion}</p>
             <p>Compra: {dolarData.compra}</p>
