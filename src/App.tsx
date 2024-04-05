@@ -50,7 +50,7 @@ const App: React.FC = () => {
       // console.log(data);
       //if (data.items && data.items.length > 0) {
         //const channelIdLocal ='UC-rI_XNppHJO-Ga4RW_CDKw';
-        const apiKey = 'AIzaSyBaReZ7kPFRgXQDIZ3NdbEjtOMb_jS3u2g';
+        const apiKey = '';
 
         //const apiUrl = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=UC-rI_XNppHJO-Ga4RW_CDKw&eventType=live&type=video&key=AIzaSyBaReZ7kPFRgXQDIZ3NdbEjtOMb_jS3u2g`;
         // const pepe = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelIdLocal}&eventType=live&type=video&key=${apiKey}`;
