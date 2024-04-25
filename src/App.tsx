@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import './App.css';
-import ReactFlipCard from 'reactjs-flip-card'
+import Marquee from "react-fast-marquee";
+import { format, parseISO } from 'date-fns';
 
-interface DolarBlue {
+interface Dolar {
   compra: number,
   venta: number,
   casa: string,
@@ -12,75 +13,60 @@ interface DolarBlue {
 }
 
 const App: React.FC = () => {
-  const styles = { card: {background: 'linear-gradient(#00b3ad,rgba(0,255,40,.41))', color: 'white', borderRadius: 20, height: '200px', width: '200px', },}
-
-  const [dolarData, setDolarData] = useState<DolarBlue>({
-    compra: 0,
-    venta: 0,
-    casa: '',
-    nombre: '',
-    moneda: '',
-    fechaActualizacion: ''
-  });
+  const apiKey = '';
+  const [dolarMarquee, setDolarMarquee] = useState<string>();
 
   //@ts-ignore
   const [channelIds, setchannelIds] = useState<string[]>(["UCba3hpU7EFBSk817y9qZkiA", "UCj6PcyLvpnIRT_2W_mwa9Aw", "UC-rI_XNppHJO-Ga4RW_CDKw", "UCC1kfsMJko54AqxtcFECt-A","UCT7KFGv6s2a-rh2Jq8ZdM1g"]);
-
-  const [videoIds, setvideoIds] = useState<string[]>(["LY2XEQ_SSXA", "cb12KmMMDJA", "avly0uwZzOE", "dFCOBD0qaxo", "WRzbqXaEEVQ"]);
+  const [videoIds, setvideoIds] = useState<string[]>(['LY2XEQ_SSXA', 'cb12KmMMDJA', 'VRWYe26u_J8', 'WRzbqXaEEVQ', 'avly0uwZzOE']);
 
   useEffect(() => {
-    fetchData();    
+    forceRefresh();
   }, []);
 
-  const fetchData = async (): Promise<void> => {
-    await fetch('https://dolarapi.com/v1/dolares/blue')
+  const fetchDolarData = async (): Promise<void> => {
+    await fetch('https://dolarapi.com/v1/dolares')
       .then(response => response.json())
-      .then(data => setDolarData(data))
+      .then(data => {  
+
+        const filteredData = data.filter((item: Dolar) => {
+          return item.casa === "oficial" || item.casa === "blue" || item.casa === "tarjeta";
+        });
+
+        const dateString = filteredData[0].fechaActualizacion;
+        const dateObject = parseISO(dateString);
+        const formattedDate = format(dateObject, 'dd/MM/yyyy HH:mm:ss');
+
+        let dolarInfo = `Actualizado: ${formattedDate}` + filteredData.map((item: Dolar) => {
+          return `*** Dolar ${item.casa.charAt(0).toUpperCase() + item.casa.slice(1)} - Compra: ${item.compra} Venta: ${item.venta}  *** `
+        }).join("| ");
+      
+        setDolarMarquee(dolarInfo);
+
+      })
       .catch(error => console.error('Error fetching data:', error));
   };
 
   const forceRefresh = async () => {
     try {
-      // const response = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&forUsername=ElObservador107.9&key=AIzaSyBaReZ7kPFRgXQDIZ3NdbEjtOMb_jS3u2g');
-      
-      // if (!response.ok) {
-      //   throw new Error('Failed to fetch channel data');
-      // }
-      // const data = await response.json();
-      // console.log(data);
-      //if (data.items && data.items.length > 0) {
-        //const channelIdLocal ='UC-rI_XNppHJO-Ga4RW_CDKw';
-        const apiKey = '';
 
-        //const apiUrl = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=UC-rI_XNppHJO-Ga4RW_CDKw&eventType=live&type=video&key=AIzaSyBaReZ7kPFRgXQDIZ3NdbEjtOMb_jS3u2g`;
-        // const pepe = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelIdLocal}&eventType=live&type=video&key=${apiKey}`;
-        
-        // console.log(pepe);
-        
-        // const apiUrl = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=UC-rI_XNppHJO-Ga4RW_CDKw&eventType=live&type=video&key=${apiKey}`;
+      fetchDolarData();
 
-        // const response2 = await fetch(pepe);
-
-        // if (!response2.ok) {
-        //   throw new Error('Failed to fetch channel data');
-        // }
-        // const data2 = await response2.json();
-        // console.log(data2);
-        // console.log(data2.items[0].id.videoId);
-
-      //}
-
-      const myVideoIds = [];
+      const myVideoIds:any = [];
       for (const channelId of channelIds) {        
         const apiUrl = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=${apiKey}`;
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-        myVideoIds.push(data.items[0].id.videoId);
-        console.log(myVideoIds);
-      }
-      if (myVideoIds.length > 0)
-        setvideoIds(myVideoIds);
 
+        await fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+          if (data.items.length > 0)
+            myVideoIds.push(data.items[0].id.videoId);
+          console.log(data);
+        });        
+      }
+
+      if (myVideoIds.length > 0)
+          setvideoIds(myVideoIds);
 
     } catch (error) {
       console.error('Error fetching channel data:', error);
@@ -89,7 +75,7 @@ const App: React.FC = () => {
 
   //@ts-ignore
   const simulateClickOnIframes = (action: string) => (event: React.MouseEvent<HTMLButtonElement>) => {
-    const iframes = document.querySelectorAll<HTMLIFrameElement>('.video');
+    const iframes = document.querySelectorAll<HTMLIFrameElement>('.myVideo');
     iframes.forEach(iframe => {
 
       const window = iframe?.contentWindow
@@ -101,62 +87,31 @@ const App: React.FC = () => {
 
   return (
     <>
-      <div className="container">
+      <div className="myContainer">
         {videoIds && videoIds.map((videoId) => (
-              <iframe key={videoId} className="video" src={`https://www.youtube.com/embed/${videoId}?mute=1&enablejsapi=1&autoplay=1`} frameBorder="0" allowFullScreen></iframe>
-              ))}
-        {dolarData && (
-          <div className="row">
-          <div className="column" >
-            <ReactFlipCard
-               frontStyle={styles.card}
-               backStyle={styles.card}
-               frontComponent={
-               <div className="toast">
-                <div className="title">Dolar Blue</div>
-                <div className="content">
-                  <p>Fecha: {dolarData.fechaActualizacion}</p>
-                  <p>Compra: {dolarData.compra}</p>
-                  <p>Venta: {dolarData.venta}</p>                  
-                </div>
-              </div>}
-               backComponent={<div>Back!</div>}
-             />
+            <iframe key={videoId} className="myVideo" src={`https://www.youtube.com/embed/${videoId}?mute=1&enablejsapi=1&autoplay=1`} frameBorder="0" allowFullScreen></iframe>))}        
+        <div className="myRow">
+          <div className="myColumnDouble">
+            <div>
+              <Marquee autoFill={false} pauseOnHover={true} pauseOnClick={true} speed={150} className="myMarquee">
+                {dolarMarquee && (<h2>{dolarMarquee}</h2>)}
+              </Marquee>
+            </div>
+            <div>
+              <Marquee autoFill={false} pauseOnHover={true} pauseOnClick={true} speed={150} className="myMarquee">
+                {dolarMarquee && (<h2>{dolarMarquee}</h2>)}
+              </Marquee>
+            </div>
           </div>
-          <div className="column" >
-            <h2>Column 2</h2>
-            <p>Some text..</p>
-          </div>
-          <div className="column" >
-            <h2>Column 3</h2>
+          <div className="myColumn">
+            <div className="btn-group-vertical align-items-center justify-content-end" role="group">
               <button onClick={(e) => simulateClickOnIframes('playVideo')(e)}>Play!</button>
               <button onClick={(e) => simulateClickOnIframes('pauseVideo')(e)}>Pause</button>
               <button onClick={(e) => simulateClickOnIframes('stopVideo')(e)}>Stop</button>
               <button onClick={forceRefresh}>Force Refresh</button>
+            </div>
           </div>
-        </div>
-          
-
-          // <div className="dolar-info">
-
-          //   <ReactFlipCard
-          //     frontStyle={styles.card}
-          //     backStyle={styles.card}
-          //     frontComponent={<div className="toast">
-          //     <div className="title">Dolar Blue</div>
-          //     <div className="content">
-          //       <p>Fecha de actualización: {dolarData.fechaActualizacion}</p>
-          //       <p>Compra: {dolarData.compra}</p>
-          //       <p>Venta: {dolarData.venta}</p>
-          //     </div>
-          //   </div>}
-          //     backComponent={<div>Back!</div>}
-          //   />
-          //   <button onClick={(e) => simulateClickOnIframes('playVideo')(e)}>Play!</button>
-          //   <button onClick={(e) => simulateClickOnIframes('pauseVideo')(e)}>Pause</button>
-          //   <button onClick={(e) => simulateClickOnIframes('stopVideo')(e)}>Stop</button>
-          // </div>
-        )}
+        </div>        
     </div>
     </>
   )
