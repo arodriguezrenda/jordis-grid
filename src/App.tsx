@@ -13,7 +13,7 @@ interface Dolar {
 }
 
 const App: React.FC = () => {
-  const apiKey = '';
+  const apiKey = 'AIzaSyBaReZ7kPFRgXQDIZ3NdbEjtOMb_jS3u2g';
   const [dolarMarquee, setDolarMarquee] = useState<string>();
 
   //@ts-ignore
@@ -47,31 +47,42 @@ const App: React.FC = () => {
       .catch(error => console.error('Error fetching data:', error));
   };
 
-  const forceRefresh = async () => {
-    try {
+const getChannelTitle = async (channelId: string): Promise<string> => {
+  const url = `https://youtube.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${apiKey}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  return data.items[0]?.snippet?.title ?? 'Unknown Channel';
+};
 
-      fetchDolarData();
+const forceRefresh = async () => {
+  try {
+    fetchDolarData();
 
-      const myVideoIds:any = [];
-      for (const channelId of channelIds) {        
-        const apiUrl = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=${apiKey}`;
+    const myVideoIds: string[] = [];
 
-        await fetch(apiUrl)
-        .then(response => response.json())
-        .then(data => {
-          if (data.items.length > 0)
-            myVideoIds.push(data.items[0].id.videoId);
-          console.log(data);
-        });        
+    const promises = channelIds.map(async (channelId) => {
+      const apiUrl = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=${apiKey}`;
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+
+      if (data.items.length > 0) {
+        myVideoIds.push(data.items[0].id.videoId);
+      } else {
+        const title = await getChannelTitle(channelId);
+        console.warn(`No live video found for channel: ${title} (${channelId})`);
       }
+    });
 
-      if (myVideoIds.length > 0)
-          setvideoIds(myVideoIds);
+    await Promise.all(promises);
 
-    } catch (error) {
-      console.error('Error fetching channel data:', error);
+    if (myVideoIds.length > 0) {
+      setvideoIds(myVideoIds);
     }
-  };
+
+  } catch (error) {
+    console.error('Error fetching channel data:', error);
+  }
+};
 
   //@ts-ignore
   const simulateClickOnIframes = (action: string) => (event: React.MouseEvent<HTMLButtonElement>) => {
