@@ -46,6 +46,7 @@ const App: React.FC = () => {
       })
       .catch(error => console.error('Error fetching data:', error));
   };
+  
 
 const getChannelTitle = async (channelId: string): Promise<string> => {
   const url = `https://youtube.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${apiKey}`;
