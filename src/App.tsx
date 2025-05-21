@@ -15,6 +15,7 @@ interface Dolar {
 const App: React.FC = () => {
   const apiKey = 'AIzaSyBaReZ7kPFRgXQDIZ3NdbEjtOMb_jS3u2g';
   const [dolarMarquee, setDolarMarquee] = useState<string>();
+  const [loading, setLoading] = useState(false);
 
   //@ts-ignore
   const [channelIds, setchannelIds] = useState<string[]>(["UCba3hpU7EFBSk817y9qZkiA", "UCj6PcyLvpnIRT_2W_mwa9Aw", "UC-rI_XNppHJO-Ga4RW_CDKw", "UCC1kfsMJko54AqxtcFECt-A","UCT7KFGv6s2a-rh2Jq8ZdM1g"]);
@@ -46,7 +47,7 @@ const App: React.FC = () => {
       })
       .catch(error => console.error('Error fetching data:', error));
   };
-  
+
 
 const getChannelTitle = async (channelId: string): Promise<string> => {
   const url = `https://youtube.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${apiKey}`;
@@ -57,12 +58,14 @@ const getChannelTitle = async (channelId: string): Promise<string> => {
 
 const forceRefresh = async () => {
   try {
+    setLoading(true);
     fetchDolarData();
 
     const myVideoIds: string[] = [];
 
     const promises = channelIds.map(async (channelId) => {
       const apiUrl = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=${apiKey}`;
+      await new Promise(res => setTimeout(res, 2000));
       const response = await fetch(apiUrl);
       const data = await response.json();
 
@@ -82,6 +85,8 @@ const forceRefresh = async () => {
 
   } catch (error) {
     console.error('Error fetching channel data:', error);
+  } finally {
+    setLoading(false);
   }
 };
 
@@ -99,6 +104,12 @@ const forceRefresh = async () => {
 
   return (
     <>
+      {loading && (
+        <div className="spinner-overlay">
+          <div className="spinner">Cargando...</div>
+        </div>
+      )}
+
       <div className="myContainer">
         {videoIds && videoIds.map((videoId) => (
             <iframe key={videoId} className="myVideo" src={`https://www.youtube.com/embed/${videoId}?mute=1&enablejsapi=1&autoplay=1`} frameBorder="0" allowFullScreen></iframe>))}        
