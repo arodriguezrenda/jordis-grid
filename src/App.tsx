@@ -45,6 +45,12 @@ const App: React.FC = () => {
       thumbnail: `https://yt3.ggpht.com/FJNJoYpkJJJZ7eQp0nh5X8Ub5XN6Jy4xUCp3OrEiNRoSVb2eSeUxWgW1byhimytcybcM_wB8-yk=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
     },
     {
+      channelId: "UC1m5LdKP0m64n8nY3NhK6Zg",
+      title: "Schmidt Ocean",
+      videoIds: [],
+      thumbnail: `https://yt3.ggpht.com/EGyrGJo_3mJxohmZxkP0Ksma9r1J1fU1ORZkGkwJkGJKRyeu6aHTD_Zi-4AodbD0hLRnTzoCWA=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
+    },
+    {
       channelId: "UCT7KFGv6s2a-rh2Jq8ZdM1g",
       title: "Crónica TV",
       videoIds: [],
@@ -88,6 +94,7 @@ const loadVideos = async (key: string) => {
 
     const storedChannels = localStorage.getItem('channels');
     if (storedChannels) {
+      //console.log('Using stored channels:', storedChannels);
       const parsedChannels: Channel[] = JSON.parse(storedChannels);
       setChannels(parsedChannels);
       const totalVideos = parsedChannels.reduce((sum, channel) => sum + channel.videoIds.length, 0);
@@ -121,12 +128,12 @@ const fetchWithRetries = async (url: string, options: RequestInit, retries = 3, 
 const forceRefresh = async (key: string) => {
   try {
     setLoading(true);
-
-    const updatedChannels = await Promise.all(
+    //console.log('Fetching live videos for channels:', channels);
+    const updatedChannels = await Promise.all(      
       channels.map(async (channel) => {
         const apiUrl = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=${channel.channelId}&eventType=live&type=video&key=${key}&_=${Date.now()}`;
         const data = await fetchWithRetries(apiUrl, { cache: "no-store" });
-
+        //console.log(channel);
         if (!data.items || data.items.length === 0) {
           return {
             ...channel,
