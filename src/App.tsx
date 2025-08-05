@@ -17,7 +17,7 @@ const App: React.FC = () => {
   const [showApiKeyForm, setShowApiKeyForm] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [totalVideos, setTotalVideos] = useState(6);
-
+  //To get the thumbnails -> https://www.googleapis.com/youtube/v3/channels?part=snippet&id=<CHANNEL_ID>&key=<API_KEY>
   //@ts-ignore
   const [channels, setChannels] = useState<Channel[]>([
     {
@@ -48,7 +48,7 @@ const App: React.FC = () => {
       channelId: "UC1m5LdKP0m64n8nY3NhK6Zg",
       title: "Schmidt Ocean",
       videoIds: [],
-      thumbnail: `https://yt3.ggpht.com/EGyrGJo_3mJxohmZxkP0Ksma9r1J1fU1ORZkGkwJkGJKRyeu6aHTD_Zi-4AodbD0hLRnTzoCWA=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
+      thumbnail: `https://yt3.ggpht.com/fkGGPzwnmCP5qJgyoHe4hT_9tDcBKoKduuYq0FMRKB8R6m_JylSAO8SohzNN73JhLLLtMBQogw=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
     },
     {
       channelId: "UCT7KFGv6s2a-rh2Jq8ZdM1g",
