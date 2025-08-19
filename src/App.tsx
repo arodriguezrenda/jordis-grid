@@ -1,4 +1,57 @@
 import { useEffect, useState } from 'react';
+
+const thumbnailSize = "240";
+const initialChannels = [
+  {
+    channelId: "UCba3hpU7EFBSk817y9qZkiA",
+    title: "LA NACION",
+    videoIds: [],
+    thumbnail: `https://yt3.ggpht.com/ytc/AIdro_kqtZB_6WG36RuIrX7Npa_XgoeV-KK74HcQ7m9xWQcKI7E=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
+  },
+  {
+    channelId: "UCj6PcyLvpnIRT_2W_mwa9Aw",
+    title: "Todo Noticias",
+    videoIds: [],
+    thumbnail: `https://yt3.ggpht.com/OL0n5KS1Yw3200B8OhLyq6Qa_g-aNGhJcuhNQJ2Ym3Ykan1Bptx1_yJrClMlMedhLR_W4cvoOw=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
+  },
+  {
+    channelId: "UCC1kfsMJko54AqxtcFECt-A",
+    title: "Urbana Play 104.3 FM",
+    videoIds: [],
+    thumbnail: `https://yt3.ggpht.com/FJNJoYpkJJJZ7eQp0nh5X8Ub5XN6Jy4xUCp3OrEiNRoSVb2eSeUxWgW1byhimytcybcM_wB8-yk=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
+  },
+  // {
+  //   channelId: "UC1m5LdKP0m64n8nY3NhK6Zg",
+  //   title: "Schmidt Ocean",
+  //   videoIds: [],
+  //   thumbnail: `https://yt3.ggpht.com/fkGGPzwnmCP5qJgyoHe4hT_9tDcBKoKduuYq0FMRKB8R6m_JylSAO8SohzNN73JhLLLtMBQogw=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
+  // },
+  {
+    channelId: "UCTHaNTsP7hsVgBxARZTuajw",
+    title: "LUZU TV",
+    videoIds: [],
+    thumbnail: `https://yt3.ggpht.com/1-K9ikW6iP0nnfCVhcCnH2MpGSWVUee1DUL4Y8-8i_xwa-JKAv-9GEs1OKAl8ddpXMaFxOyB=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
+  },
+  {
+    channelId: "UC7mJ2EDXFomeDIRFu5FtEbA",
+    title: "OLGA",
+    videoIds: [],
+    thumbnail: `https://yt3.ggpht.com/D4kn5IQBl9r2r-B03hGiUKXtO1xq59lh5F1ARe5UnngDI3TH3LIW6liz2nidzy8NAhKW-wucig=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
+  },
+  {
+    channelId: "UC-rI_XNppHJO-Ga4RW_CDKw",
+    title: "El Observador 107.9",
+    videoIds: [],
+    thumbnail: `https://yt3.ggpht.com/MmlOtGwNdzp-2FlnS4Zk8aCd1JCVlzPo-57bkvRkoywzGmxXaLWSazItM8dkVa7TEAAGkgOQug=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
+  },
+  {
+    channelId: "UCT7KFGv6s2a-rh2Jq8ZdM1g",
+    title: "Crónica TV",
+    videoIds: [],
+    thumbnail: `https://yt3.ggpht.com/EGyrGJo_3mJxohmZxkP0Ksma9r1J1fU1ORZkGkwJkGJKRyeu6aHTD_Zi-4AodbD0hLRnTzoCWA=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
+  }
+];
+
 import './App.css';
 
 interface Channel {
@@ -10,53 +63,15 @@ interface Channel {
 }
 
 const App: React.FC = () => {
-
-  const thumbnailSize = "240";  
   const [loading, setLoading] = useState(false);
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [showApiKeyForm, setShowApiKeyForm] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [totalVideos, setTotalVideos] = useState(6);
+  //to get the channelId -> https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=@<CHANNEL_NAME>&key=<API_KEY>
   //To get the thumbnails -> https://www.googleapis.com/youtube/v3/channels?part=snippet&id=<CHANNEL_ID>&key=<API_KEY>
   //@ts-ignore
-  const [channels, setChannels] = useState<Channel[]>([
-    {
-      channelId: "UCba3hpU7EFBSk817y9qZkiA",
-      title: "LA NACION",
-      videoIds: [],
-      thumbnail: `https://yt3.ggpht.com/ytc/AIdro_kqtZB_6WG36RuIrX7Npa_XgoeV-KK74HcQ7m9xWQcKI7E=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-    },
-    {
-      channelId: "UCj6PcyLvpnIRT_2W_mwa9Aw",
-      title: "Todo Noticias",
-      videoIds: [],
-      thumbnail: `https://yt3.ggpht.com/OL0n5KS1Yw3200B8OhLyq6Qa_g-aNGhJcuhNQJ2Ym3Ykan1Bptx1_yJrClMlMedhLR_W4cvoOw=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-    },
-    {
-      channelId: "UC-rI_XNppHJO-Ga4RW_CDKw",
-      title: "El Observador 107.9",
-      videoIds: [],
-      thumbnail: `https://yt3.ggpht.com/MmlOtGwNdzp-2FlnS4Zk8aCd1JCVlzPo-57bkvRkoywzGmxXaLWSazItM8dkVa7TEAAGkgOQug=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-    },
-    {
-      channelId: "UCC1kfsMJko54AqxtcFECt-A",
-      title: "Urbana Play 104.3 FM",
-      videoIds: [],
-      thumbnail: `https://yt3.ggpht.com/FJNJoYpkJJJZ7eQp0nh5X8Ub5XN6Jy4xUCp3OrEiNRoSVb2eSeUxWgW1byhimytcybcM_wB8-yk=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-    },
-    {
-      channelId: "UC1m5LdKP0m64n8nY3NhK6Zg",
-      title: "Schmidt Ocean",
-      videoIds: [],
-      thumbnail: `https://yt3.ggpht.com/fkGGPzwnmCP5qJgyoHe4hT_9tDcBKoKduuYq0FMRKB8R6m_JylSAO8SohzNN73JhLLLtMBQogw=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-    },
-    {
-      channelId: "UCT7KFGv6s2a-rh2Jq8ZdM1g",
-      title: "Crónica TV",
-      videoIds: [],
-      thumbnail: `https://yt3.ggpht.com/EGyrGJo_3mJxohmZxkP0Ksma9r1J1fU1ORZkGkwJkGJKRyeu6aHTD_Zi-4AodbD0hLRnTzoCWA=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-    }
-  ]);
+  const [channels, setChannels] = useState<Channel[]>(initialChannels);
 
   const getApiKeyFromStorage = () => {    
     const storedKey = localStorage.getItem('apiKey');
@@ -128,12 +143,12 @@ const fetchWithRetries = async (url: string, options: RequestInit, retries = 3, 
 const forceRefresh = async (key: string) => {
   try {
     setLoading(true);
-    //console.log('Fetching live videos for channels:', channels);
-    const updatedChannels = await Promise.all(      
-      channels.map(async (channel) => {
+    localStorage.removeItem('channels');
+    // Usar siempre los canales iniciales
+    const updatedChannels = await Promise.all(
+      initialChannels.map(async (channel) => {
         const apiUrl = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=${channel.channelId}&eventType=live&type=video&key=${key}&_=${Date.now()}`;
         const data = await fetchWithRetries(apiUrl, { cache: "no-store" });
-        //console.log(channel);
         if (!data.items || data.items.length === 0) {
           return {
             ...channel,
