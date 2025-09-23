@@ -27,6 +27,12 @@ const initialChannels = [
   //   thumbnail: `https://yt3.ggpht.com/fkGGPzwnmCP5qJgyoHe4hT_9tDcBKoKduuYq0FMRKB8R6m_JylSAO8SohzNN73JhLLLtMBQogw=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
   // },
   {
+    channelId: "UCvCTWHCbBC0b9UIeLeNs8ug",
+    title: "Vorterix",
+    videoIds: [],
+    thumbnail: `https://yt3.ggpht.com/MLwjpG_fQdT6e-8_CNsqcOSKghc58Q_xGoZMn5lp37fGCUUqh3PoW5L3-XUB093Iv9Ozt4C9NgU=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
+  },
+  {
     channelId: "UCTHaNTsP7hsVgBxARZTuajw",
     title: "LUZU TV",
     videoIds: [],
