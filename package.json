@@ -28,6 +28,9 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "gh-pages": "^6.3.0",
     "typescript": "5.8.3",
-    "vite": "^7.0.6"
+    "vite": "^7.1.11"
+  },
+  "overrides": {
+    "js-yaml": "4.1.1"
   }
 }
