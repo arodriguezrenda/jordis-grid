@@ -1,276 +1,321 @@
-import { useEffect, useState } from 'react';
-
-const thumbnailSize = "240";
-const initialChannels = [
-  {
-    channelId: "UCba3hpU7EFBSk817y9qZkiA",
-    title: "LA NACION",
-    videoIds: [],
-    thumbnail: `https://yt3.ggpht.com/ytc/AIdro_kqtZB_6WG36RuIrX7Npa_XgoeV-KK74HcQ7m9xWQcKI7E=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-  },
-  {
-    channelId: "UCj6PcyLvpnIRT_2W_mwa9Aw",
-    title: "Todo Noticias",
-    videoIds: [],
-    thumbnail: `https://yt3.ggpht.com/OL0n5KS1Yw3200B8OhLyq6Qa_g-aNGhJcuhNQJ2Ym3Ykan1Bptx1_yJrClMlMedhLR_W4cvoOw=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-  },
-  {
-    channelId: "UCC1kfsMJko54AqxtcFECt-A",
-    title: "Urbana Play 104.3 FM",
-    videoIds: [],
-    thumbnail: `https://yt3.ggpht.com/FJNJoYpkJJJZ7eQp0nh5X8Ub5XN6Jy4xUCp3OrEiNRoSVb2eSeUxWgW1byhimytcybcM_wB8-yk=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-  },
-  // {
-  //   channelId: "UC1m5LdKP0m64n8nY3NhK6Zg",
-  //   title: "Schmidt Ocean",
-  //   videoIds: [],
-  //   thumbnail: `https://yt3.ggpht.com/fkGGPzwnmCP5qJgyoHe4hT_9tDcBKoKduuYq0FMRKB8R6m_JylSAO8SohzNN73JhLLLtMBQogw=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-  // },
-  {
-    channelId: "UCvCTWHCbBC0b9UIeLeNs8ug",
-    title: "Vorterix",
-    videoIds: [],
-    thumbnail: `https://yt3.ggpht.com/MLwjpG_fQdT6e-8_CNsqcOSKghc58Q_xGoZMn5lp37fGCUUqh3PoW5L3-XUB093Iv9Ozt4C9NgU=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-  },
-  {
-    channelId: "UCTHaNTsP7hsVgBxARZTuajw",
-    title: "LUZU TV",
-    videoIds: [],
-    thumbnail: `https://yt3.ggpht.com/1-K9ikW6iP0nnfCVhcCnH2MpGSWVUee1DUL4Y8-8i_xwa-JKAv-9GEs1OKAl8ddpXMaFxOyB=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-  },
-  {
-    channelId: "UC7mJ2EDXFomeDIRFu5FtEbA",
-    title: "OLGA",
-    videoIds: [],
-    thumbnail: `https://yt3.ggpht.com/D4kn5IQBl9r2r-B03hGiUKXtO1xq59lh5F1ARe5UnngDI3TH3LIW6liz2nidzy8NAhKW-wucig=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-  },
-  {
-    channelId: "UC-rI_XNppHJO-Ga4RW_CDKw",
-    title: "El Observador 107.9",
-    videoIds: [],
-    thumbnail: `https://yt3.ggpht.com/MmlOtGwNdzp-2FlnS4Zk8aCd1JCVlzPo-57bkvRkoywzGmxXaLWSazItM8dkVa7TEAAGkgOQug=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-  },
-  {
-    channelId: "UCT7KFGv6s2a-rh2Jq8ZdM1g",
-    title: "Crónica TV",
-    videoIds: [],
-    thumbnail: `https://yt3.ggpht.com/EGyrGJo_3mJxohmZxkP0Ksma9r1J1fU1ORZkGkwJkGJKRyeu6aHTD_Zi-4AodbD0hLRnTzoCWA=s${thumbnailSize}-c-k-c0x00ffffff-no-rj`
-  }
-];
-
+import { type FC, useEffect, useMemo, useState } from 'react';
 import './App.css';
+import { ControlMenu } from './components/ControlMenu';
+import { VideoGrid } from './components/VideoGrid';
+import { initialChannels, type Channel, type LiveVideoOption } from './model';
+import { useYoutubePlayers } from './hooks/useYoutubePlayers';
 
-interface Channel {
-  channelId: string;  
-  title: string;
-  videoIds: string[];
-  thumbnail?: string;
-  description?: string;
-}
+const ACTIVE_AUDIO_VIDEO_KEY = 'activeAudioVideoId';
 
-const App: React.FC = () => {
+const normalizeChannels = (raw: any): Channel[] => {
+  if (!Array.isArray(raw)) return initialChannels;
+
+  return raw.map((item: any) => {
+    const legacyVideoIds = Array.isArray(item.videoIds) ? item.videoIds : [];
+    const liveVideos = Array.isArray(item.liveVideos)
+      ? item.liveVideos.filter((v: any) => v?.videoId).map((v: any) => ({ videoId: String(v.videoId), title: String(v.title || 'Live') }))
+      : legacyVideoIds.map((videoId: string, index: number) => ({ videoId, title: `Live #${index + 1}` }));
+
+    return {
+      channelId: String(item.channelId),
+      title: String(item.title),
+      thumbnail: item.thumbnail ? String(item.thumbnail) : undefined,
+      liveVideos,
+    };
+  });
+};
+
+const App: FC = () => {
   const [loading, setLoading] = useState(false);
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [showApiKeyForm, setShowApiKeyForm] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
-  const [totalVideos, setTotalVideos] = useState(6);
-  //to get the channelId -> https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=@<CHANNEL_NAME>&key=<API_KEY>
-  //To get the thumbnails -> https://www.googleapis.com/youtube/v3/channels?part=snippet&id=<CHANNEL_ID>&key=<API_KEY>
-  //@ts-ignore
+  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
+  const [isMenuPinned, setIsMenuPinned] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [selectedVideoId, setSelectedVideoId] = useState('');
+  const [activeAudioVideoId, setActiveAudioVideoId] = useState('');
+  const [lastSmartSyncSummary, setLastSmartSyncSummary] = useState('No sync yet.');
+  const [isSmartSyncRunning, setIsSmartSyncRunning] = useState(false);
+  const [healthEvents, setHealthEvents] = useState<string[]>([]);
   const [channels, setChannels] = useState<Channel[]>(initialChannels);
 
-  const getApiKeyFromStorage = () => {    
+  const liveVideos: LiveVideoOption[] = useMemo(
+    () =>
+      channels.flatMap((channel) =>
+        channel.liveVideos.map((video, index) => ({
+          videoId: video.videoId,
+          channelTitle: channel.title,
+          videoTitle: video.title,
+          label: `${channel.title} - ${video.title || `Live #${index + 1}`}`,
+        }))
+      ),
+    [channels]
+  );
+
+  const {
+    controlAllVideos,
+    controlSingleVideo,
+    unmuteSingleVideo,
+    smartSyncPlayers,
+    analyzeAndRecoverPlayers,
+  } = useYoutubePlayers(activeAudioVideoId);
+
+  useEffect(() => {
+    const storedAudioVideo = localStorage.getItem(ACTIVE_AUDIO_VIDEO_KEY);
+    if (storedAudioVideo) setActiveAudioVideoId(storedAudioVideo);
+  }, []);
+
+  useEffect(() => {
+    if (activeAudioVideoId) {
+      localStorage.setItem(ACTIVE_AUDIO_VIDEO_KEY, activeAudioVideoId);
+    }
+  }, [activeAudioVideoId]);
+
+  useEffect(() => {
+    if (!liveVideos.length) {
+      setSelectedVideoId('');
+      setActiveAudioVideoId('');
+      return;
+    }
+
+    if (!selectedVideoId || !liveVideos.some((video) => video.videoId === selectedVideoId)) {
+      setSelectedVideoId(liveVideos[0].videoId);
+    }
+
+    if (!activeAudioVideoId || !liveVideos.some((video) => video.videoId === activeAudioVideoId)) {
+      setActiveAudioVideoId(liveVideos[0].videoId);
+    }
+  }, [liveVideos, selectedVideoId, activeAudioVideoId]);
+
+  useEffect(() => {
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMenuPinned(false);
+    };
+    window.addEventListener('keydown', onEscape);
+    return () => window.removeEventListener('keydown', onEscape);
+  }, []);
+
+  useEffect(() => {
+    let isCancelled = false;
+    let isRunning = false;
+
+    const runHealthCheck = async () => {
+      if (isRunning) return;
+      isRunning = true;
+      try {
+        const { recoveredIds } = await analyzeAndRecoverPlayers();
+        if (isCancelled) return;
+
+        if (recoveredIds.length > 0) {
+          const timestamp = new Date().toLocaleTimeString();
+          const eventText = `${timestamp}: Auto-recovered ${recoveredIds.length} stalled stream(s).`;
+          setHealthEvents((prev) => [eventText, ...prev].slice(0, 5));
+        }
+      } finally {
+        isRunning = false;
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      if (liveVideos.length > 0) void runHealthCheck();
+    }, 20000);
+
+    if (liveVideos.length > 0) void runHealthCheck();
+
+    return () => {
+      isCancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [analyzeAndRecoverPlayers, liveVideos.length]);
+
+  const getApiKeyFromStorage = () => {
     const storedKey = localStorage.getItem('apiKey');
-    if (storedKey) {
-      setApiKey(storedKey);
-      return storedKey;
-    } else {
+    if (!storedKey) {
       setShowApiKeyForm(true);
       return null;
     }
+
+    setApiKey(storedKey);
+    return storedKey;
   };
 
-    const handleApiKeySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (apiKeyInput.trim()) {
-      localStorage.setItem('apiKey', apiKeyInput.trim());
-      setApiKey(apiKeyInput.trim());
-      setShowApiKeyForm(false);
-      loadVideos(apiKeyInput.trim());
+  const parseApiError = (response: any): string | null => {
+    const errorCode = response?.error?.code;
+    const reason = response?.error?.errors?.[0]?.reason as string | undefined;
+
+    if (errorCode === 400 && reason === 'keyInvalid') return 'Invalid API key. Please update your key.';
+    if (errorCode === 403 && reason === 'quotaExceeded') return 'API quota exceeded. Try again later or use another key.';
+    if (errorCode === 403) return 'API access denied. Check your key permissions.';
+    return null;
+  };
+
+  const fetchWithRetries = async (url: string, retries = 3, delay = 900) => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      if (attempt > 1) await new Promise((resolve) => setTimeout(resolve, delay));
+      const response = await fetch(url, { cache: 'no-store' });
+      const data = await response.json();
+
+      const apiError = parseApiError(data);
+      if (apiError) throw new Error(apiError);
+
+      if (Array.isArray(data?.items) && data.items.length > 0) return data;
+      if (attempt === retries) return data;
+    }
+
+    return { items: [] };
+  };
+
+  const forceRefresh = async (key: string) => {
+    try {
+      setLoading(true);
+      setStatusMessage(null);
+      setApiKeyError(null);
+      localStorage.removeItem('channels');
+
+      const updatedChannels = await Promise.all(
+        initialChannels.map(async (channel) => {
+          const apiUrl = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=${channel.channelId}&eventType=live&type=video&key=${key}&_=${Date.now()}`;
+          const data = await fetchWithRetries(apiUrl);
+          const liveVideos = Array.isArray(data.items)
+            ? data.items
+                .filter((item: any) => item?.id?.videoId)
+                .map((item: any) => ({
+                  videoId: String(item.id.videoId),
+                  title: String(item?.snippet?.title || 'Live'),
+                }))
+            : [];
+
+          return { ...channel, liveVideos };
+        })
+      );
+
+      setChannels(updatedChannels);
+      localStorage.setItem('channels', JSON.stringify(updatedChannels));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error refreshing live streams.';
+      setStatusMessage(message);
+      if (message.toLowerCase().includes('api key') || message.toLowerCase().includes('quota')) {
+        setApiKeyError(message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
+  const loadVideos = async (key: string) => {
+    try {
+      setLoading(true);
+      setStatusMessage(null);
+      setApiKeyError(null);
+
+      const storedChannels = localStorage.getItem('channels');
+      if (storedChannels) {
+        setChannels(normalizeChannels(JSON.parse(storedChannels)));
+      } else {
+        await forceRefresh(key);
+      }
+    } catch (error) {
+      console.error('Error fetching channel data:', error);
+      setStatusMessage('Could not load channels. Please try refreshing again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApiKeySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!apiKeyInput.trim()) return;
+
+    localStorage.setItem('apiKey', apiKeyInput.trim());
+    setApiKey(apiKeyInput.trim());
+    setShowApiKeyForm(false);
+    await loadVideos(apiKeyInput.trim());
+  };
 
   useEffect(() => {
     const key = getApiKeyFromStorage();
-    if (key) {
-      loadVideos(key);
-    }
-    // eslint-disable-next-line
+    if (key) void loadVideos(key);
   }, []);
 
-const loadVideos = async (key: string) => {
-  try {
-    setLoading(true);   
+  const handleUnmuteSelected = () => {
+    if (!selectedVideoId) return;
+    setActiveAudioVideoId(selectedVideoId);
+    unmuteSingleVideo(selectedVideoId);
+  };
 
-    const storedChannels = localStorage.getItem('channels');
-    if (storedChannels) {
-      //console.log('Using stored channels:', storedChannels);
-      const parsedChannels: Channel[] = JSON.parse(storedChannels);
-      setChannels(parsedChannels);
-      const totalVideos = parsedChannels.reduce((sum, channel) => sum + channel.videoIds.length, 0);
-      setTotalVideos(totalVideos);
+  const handleSmartSync = async () => {
+    if (isSmartSyncRunning) return;
+    setIsSmartSyncRunning(true);
+    try {
+      const result = await smartSyncPlayers();
+      setLastSmartSyncSummary(`Updated ${result.updated}/${result.total} background videos.`);
+      setStatusMessage(
+        result.total === 0
+          ? 'No background videos to sync.'
+          : result.updated > 0
+          ? `Smart Sync updated ${result.updated} video(s).`
+          : 'Smart Sync: no stale videos found.'
+      );
+    } finally {
+      setIsSmartSyncRunning(false);
+      window.setTimeout(() => setStatusMessage(null), 1800);
     }
-    else {
-      forceRefresh(key);
-    }
-  } catch (error) {
-    console.error('Error fetching channel data:', error);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-const fetchWithRetries = async (url: string, options: RequestInit, retries = 3, delay = 2000) => {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    await new Promise(res => setTimeout(res, delay));
-    const response = await fetch(url, options);
-    const data = await response.json();
-    if (data.items && data.items.length > 0) {
-      return data;
-    }
-    if (attempt === retries) {
-      return data;
-    }
-  }
-};
-
-const forceRefresh = async (key: string) => {
-  try {
-    setLoading(true);
-    localStorage.removeItem('channels');
-    // Usar siempre los canales iniciales
-    const updatedChannels = await Promise.all(
-      initialChannels.map(async (channel) => {
-        const apiUrl = `https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=${channel.channelId}&eventType=live&type=video&key=${key}&_=${Date.now()}`;
-        const data = await fetchWithRetries(apiUrl, { cache: "no-store" });
-        if (!data.items || data.items.length === 0) {
-          return {
-            ...channel,
-            videoIds: [],
-          };
-        }
-        const videoIds = Array.isArray(data.items)
-          ? data.items
-              .filter((item: { id: { videoId: any; }; }) => item.id && item.id.videoId)
-              .map((item: { id: { videoId: any; }; }) => item.id.videoId)
-          : [];
-
-        return {
-          ...channel,
-          videoIds,
-        };
-      })
-    );
-
-    setChannels(updatedChannels);
-    const totalVideos = updatedChannels.reduce((sum, channel) => sum + channel.videoIds.length, 0);
-    setTotalVideos(totalVideos);
-
-    localStorage.setItem('channels', JSON.stringify(updatedChannels));
-
-  } catch (error) {
-    console.error('Error fetching channel data:', error);
-  } finally {
-    setLoading(false);
-  }
-};
-
-  //@ts-ignore
-  const simulateClickOnIframes = (action: string) => (event: React.MouseEvent<HTMLButtonElement>) => {
-    const iframes = document.querySelectorAll<HTMLIFrameElement>('.myVideo');
-    iframes.forEach(iframe => {
-
-      const window = iframe?.contentWindow
-      
-      if (!!window)
-        window.postMessage(`{"event":"command","func":"${action}","args":""}`, '*');
-    });
-  }
+  };
 
   if (showApiKeyForm) {
-      return (
-        <div className="apiKeyFormContainer">
-          <form onSubmit={handleApiKeySubmit}>
-            <label>
-              Pleasae add your YouTube's API key:
-              <input
-                type="text"
-                value={apiKeyInput}
-                onChange={e => setApiKeyInput(e.target.value)}
-                required
-              />
-            </label>
-            <button type="submit">Save</button>
-          </form>
-        </div>
-      );
-    }
+    return (
+      <div className="apiKeyFormContainer">
+        <form className="apiKeyForm" onSubmit={handleApiKeySubmit}>
+          <h2>Set up YouTube API Key</h2>
+          <p>This is only used to check which channels are currently live.</p>
+          <label htmlFor="apiKeyInput">
+            API Key:
+            <input
+              id="apiKeyInput"
+              type="text"
+              value={apiKeyInput}
+              onChange={(e) => setApiKeyInput(e.target.value)}
+              required
+            />
+          </label>
+          {apiKeyError && <p className="apiError">{apiKeyError}</p>}
+          <button type="submit">Save</button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <>
       {loading && (
         <div className="spinner-overlay">
-          <div className="spinner"></div>
+          <div className="spinner" />
         </div>
       )}
 
-      <div className={totalVideos <= 6 ? "videoGrid-2-3" : "videoGrid-3-3"}>
-        {channels && channels.map((channel) => (
-          channel.videoIds.length === 0 ? (
-            <img
-              key={channel.channelId}
-              className="myVideo"
-              src={channel.thumbnail}
-              alt={channel.title}
-              style={{ width: '100%', height: '100%' }}
-            />
-          ) : (
-            channel.videoIds.map((videoId) => (
-              <iframe
-                key={videoId}
-                className="myVideo"
-                src={`https://www.youtube.com/embed/${videoId}?mute=1&enablejsapi=1&autoplay=1`}
-                frameBorder="0"
-                allowFullScreen
-              />
-            ))
-          )
-        ))}
-      </div>
+      {statusMessage && <div className="toast">{statusMessage}</div>}
 
-<div className="myRowWrapper" style={{ position: 'fixed', bottom: '1rem', right: '1rem', zIndex: 1000 }}>
-  <div className="myRow">
-    <div>
-      <button onClick={(e) => simulateClickOnIframes('playVideo')(e)}>Play!</button>
-      <button onClick={(e) => simulateClickOnIframes('pauseVideo')(e)}>Pause</button>
-      <button onClick={(e) => simulateClickOnIframes('stopVideo')(e)}>Stop</button>
-      <button onClick={() => apiKey && forceRefresh(apiKey)}>Force Refresh</button>
-      <button
-        onClick={() => {
-          if (totalVideos <= 6) {
-            setTotalVideos(9);
-          } else {
-            setTotalVideos(6);
-          }
-        }}>{totalVideos <= 6 ? "2x3" : "3x3"}
-      </button>
-    </div>
-  </div>
-</div>
+      <VideoGrid channels={channels} />
+
+      <ControlMenu
+        isMenuPinned={isMenuPinned}
+        setIsMenuPinned={setIsMenuPinned}
+        liveVideos={liveVideos}
+        selectedVideoId={selectedVideoId}
+        setSelectedVideoId={setSelectedVideoId}
+        onAllAction={controlAllVideos}
+        onSingleAction={controlSingleVideo}
+        onUnmuteSelected={handleUnmuteSelected}
+        onRefresh={() => apiKey && forceRefresh(apiKey)}
+        onSmartSync={handleSmartSync}
+        isSmartSyncRunning={isSmartSyncRunning}
+        lastSmartSyncSummary={lastSmartSyncSummary}
+        healthEvents={healthEvents}
+      />
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;
+

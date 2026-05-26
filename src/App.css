@@ -3,26 +3,20 @@
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
   height: 100%;
-  height: 100%;
 }
 
-.videoGrid-2-3 {
+.videoGrid {
   display: grid;  
-  grid-template-columns: repeat(3, 33.33%);
-  grid-template-rows: repeat(2, 50%);  
-  height: 100%;
-}
-
-.videoGrid-3-3 {
-  display: grid;  
-  grid-template-columns: repeat(3, 33.33%);  
-  grid-template-rows: repeat(3, 33.33%);
-  height: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: minmax(220px, auto);
+  min-height: 100vh;
 }
 
 .myVideo {
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  border: 0;
 }
 /*
 .logo {
@@ -74,31 +68,6 @@
 }
 
 /* Clear floats after the columns */
-.myRow {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
-}
-
-.myRowWrapper:hover .myRow {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.myMarquee {
-  width: 50px;
-  height: 100px;
-}
-
-.myMarquee-container {
-  overflow-x: hidden !important;
-  display: flex !important;
-  flex-direction: row !important;
-  position: relative;
-  width: var(--width);
-  transform: var(--transform);
-}
-
 .spinner-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -129,15 +98,15 @@
 
 .toast {
   position: fixed;
-  bottom: 80px;
+  top: 3.5rem;
   right: 1rem;
   background: #323232;
   color: #fff;
-  padding: 1rem 2rem;
+  padding: 0.75rem 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   z-index: 2000;
-  font-size: 1rem;
+  font-size: 0.9rem;
   opacity: 0.95;
   animation: fadein 0.5s;
 }
@@ -145,4 +114,181 @@
 @keyframes fadein {
   from { opacity: 0; transform: translateY(20px);}
   to { opacity: 0.95; transform: translateY(0);}
+}
+
+.compactMenuWrapper {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1200;
+}
+
+.compactMenuHandle {
+  width: 34px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+  border: 0;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+}
+
+.compactMenu {
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  margin-top: 6px;
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.6rem;
+  border-radius: 14px;
+  backdrop-filter: blur(8px);
+  background: linear-gradient(180deg, rgba(33, 37, 42, 0.94) 0%, rgba(18, 20, 24, 0.94) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.34);
+}
+
+.compactMenuWrapper:hover .compactMenu,
+.compactMenuWrapper:focus-within .compactMenu,
+.compactMenuWrapper.pinned .compactMenu {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.menuSection {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0.35rem 0.4rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.healthSection {
+  align-items: flex-start;
+}
+
+.menuSectionTitle {
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-right: 0.2rem;
+}
+
+.menuSyncMeta {
+  font-size: 0.76rem;
+  opacity: 0.82;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.compactMenu button,
+.compactMenu select {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.82rem;
+}
+
+.compactMenu button:hover,
+.compactMenu select:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.compactMenu button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.compactMenu button:focus-visible,
+.compactMenu select:focus-visible,
+.compactMenuHandle:focus-visible {
+  outline: 2px solid #a7d8ff;
+  outline-offset: 2px;
+}
+
+.compactMenu select {
+  min-width: 180px;
+  appearance: auto;
+  color: #ffffff;
+}
+
+.compactMenu select option {
+  color: #111111;
+  background: #ffffff;
+}
+
+.channelFallback {
+  position: relative;
+}
+
+.channelLabel {
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+}
+
+.apiKeyFormContainer {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.apiKeyForm {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(20, 20, 20, 0.85);
+}
+
+.apiKeyForm input {
+  margin-top: 0.35rem;
+  width: 100%;
+}
+
+.apiError {
+  color: #ffb8b8;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .videoGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: minmax(170px, auto);
+  }
+}
+
+@media (max-width: 640px) {
+  .videoGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: minmax(120px, auto);
+  }
+
+  .compactMenu {
+    max-width: calc(100vw - 16px);
+    justify-content: center;
+  }
 }
