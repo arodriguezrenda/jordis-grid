@@ -14,6 +14,7 @@ export interface Channel {
 
 export interface LiveVideoOption {
   videoId: string;
+  channelId: string;
   channelTitle: string;
   videoTitle: string;
   label: string;

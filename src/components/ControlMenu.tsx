@@ -8,13 +8,12 @@ interface ControlMenuProps {
   selectedVideoId: string;
   setSelectedVideoId: Dispatch<SetStateAction<string>>;
   onAllAction: (action: string) => void;
-  onSingleAction: (action: string, videoId: string) => void;
+  onSingleAction: (action: string) => void;
   onUnmuteSelected: () => void;
   onRefresh: () => void;
   onSmartSync: () => void;
   isSmartSyncRunning: boolean;
   lastSmartSyncSummary: string;
-  healthEvents: string[];
 }
 
 export const ControlMenu: FC<ControlMenuProps> = ({
@@ -30,7 +29,6 @@ export const ControlMenu: FC<ControlMenuProps> = ({
   onSmartSync,
   isSmartSyncRunning,
   lastSmartSyncSummary,
-  healthEvents,
 }) => {
   return (
     <div className={`compactMenuWrapper ${isMenuPinned ? 'pinned' : ''}`}>
@@ -52,34 +50,38 @@ export const ControlMenu: FC<ControlMenuProps> = ({
         </div>
         <div className="menuSection">
           <span className="menuSectionTitle">Single Video</span>
-          <select
-            value={selectedVideoId}
-            onChange={(e) => setSelectedVideoId(e.target.value)}
-            disabled={!liveVideos.length}
-            aria-label="Select live video"
-          >
-            {liveVideos.length === 0 && <option value="">No live videos</option>}
-            {liveVideos.map((video) => (
-              <option key={video.videoId} value={video.videoId}>
-                {video.label}
-              </option>
-            ))}
-          </select>
-          <button onClick={() => onSingleAction('playVideo', selectedVideoId)} disabled={!selectedVideoId}>
-            Play
-          </button>
-          <button onClick={() => onSingleAction('pauseVideo', selectedVideoId)} disabled={!selectedVideoId}>
-            Pause
-          </button>
-          <button onClick={() => onSingleAction('stopVideo', selectedVideoId)} disabled={!selectedVideoId}>
-            Stop
-          </button>
-          <button onClick={() => onSingleAction('mute', selectedVideoId)} disabled={!selectedVideoId}>
-            Mute
-          </button>
-          <button onClick={onUnmuteSelected} disabled={!selectedVideoId}>
-            Unmute
-          </button>
+          <div className="singleVideoControls">
+            <select
+              value={selectedVideoId}
+              onChange={(e) => setSelectedVideoId(e.target.value)}
+              disabled={!liveVideos.length}
+              aria-label="Select live video"
+            >
+              {liveVideos.length === 0 && <option value="">No live videos</option>}
+              {liveVideos.map((video) => (
+                <option key={video.videoId} value={video.videoId}>
+                  {video.label}
+                </option>
+              ))}
+            </select>
+            <div className="singleVideoActions">
+              <button onClick={() => onSingleAction('playVideo')} disabled={!selectedVideoId}>
+                Play
+              </button>
+              <button onClick={() => onSingleAction('pauseVideo')} disabled={!selectedVideoId}>
+                Pause
+              </button>
+              <button onClick={() => onSingleAction('stopVideo')} disabled={!selectedVideoId}>
+                Stop
+              </button>
+              <button onClick={() => onSingleAction('mute')} disabled={!selectedVideoId}>
+                Mute
+              </button>
+              <button onClick={onUnmuteSelected} disabled={!selectedVideoId}>
+                Unmute
+              </button>
+            </div>
+          </div>
         </div>
         <div className="menuSection">
           <span className="menuSectionTitle">View</span>
@@ -89,26 +91,13 @@ export const ControlMenu: FC<ControlMenuProps> = ({
         </div>
         <div className="menuSection">
           <span className="menuSectionTitle">Data</span>
-          <button onClick={onRefresh}>Refresh</button>
+          <button onClick={onRefresh}>Refresh Live Channels</button>
           <button onClick={onSmartSync} disabled={isSmartSyncRunning}>
-            {isSmartSyncRunning ? 'Syncing...' : 'Smart Sync'}
+            {isSmartSyncRunning ? 'Syncing...' : 'Sync Background to Live'}
           </button>
           <span className="menuSyncMeta">{lastSmartSyncSummary}</span>
-        </div>
-        <div className="menuSection healthSection">
-          <span className="menuSectionTitle">Health Log</span>
-          {healthEvents.length === 0 ? (
-            <span className="menuSyncMeta">No recoveries yet.</span>
-          ) : (
-            healthEvents.map((event) => (
-              <span key={event} className="menuSyncMeta">
-                {event}
-              </span>
-            ))
-          )}
         </div>
       </div>
     </div>
   );
 };
-

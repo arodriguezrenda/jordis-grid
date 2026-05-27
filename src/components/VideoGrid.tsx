@@ -20,17 +20,21 @@ export const VideoGrid: FC<VideoGridProps> = ({ channels }) => {
             <div className="channelLabel">{channel.title}</div>
           </div>
         ) : (
-          channel.liveVideos.map((video) => (
-            <iframe
-              key={video.videoId}
-              className="myVideo"
-              data-video-id={video.videoId}
-              src={`https://www.youtube.com/embed/${video.videoId}?mute=1&enablejsapi=1&autoplay=1&playsinline=1`}
-              title={`${channel.title} live`}
-              frameBorder="0"
-              allowFullScreen
-            />
-          ))
+          (() => {
+            const primaryLive = channel.liveVideos[0];
+            if (!primaryLive) return null;
+            return (
+          <iframe
+            key={primaryLive.videoId}
+            className="myVideo"
+            data-channel-id={channel.channelId}
+            src={`https://www.youtube.com/embed/${primaryLive.videoId}?mute=1&enablejsapi=1&autoplay=1&playsinline=1`}
+            title={`${channel.title} live`}
+            frameBorder="0"
+            allowFullScreen
+          />
+            );
+          })()
         )
       )}
     </div>

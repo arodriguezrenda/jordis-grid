@@ -5,7 +5,8 @@ import { VideoGrid } from './components/VideoGrid';
 import { initialChannels, type Channel, type LiveVideoOption } from './model';
 import { useYoutubePlayers } from './hooks/useYoutubePlayers';
 
-const ACTIVE_AUDIO_VIDEO_KEY = 'activeAudioVideoId';
+const ACTIVE_AUDIO_CHANNEL_KEY = 'activeAudioChannelId';
+const CHANNELS_SYNCED_ON_BOOT_KEY = 'channelsSyncedOnBootAt';
 
 const normalizeChannels = (raw: any): Channel[] => {
   if (!Array.isArray(raw)) return initialChannels;
@@ -34,10 +35,9 @@ const App: FC = () => {
   const [isMenuPinned, setIsMenuPinned] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [selectedVideoId, setSelectedVideoId] = useState('');
-  const [activeAudioVideoId, setActiveAudioVideoId] = useState('');
+  const [activeAudioChannelId, setActiveAudioChannelId] = useState('');
   const [lastSmartSyncSummary, setLastSmartSyncSummary] = useState('No sync yet.');
   const [isSmartSyncRunning, setIsSmartSyncRunning] = useState(false);
-  const [healthEvents, setHealthEvents] = useState<string[]>([]);
   const [channels, setChannels] = useState<Channel[]>(initialChannels);
 
   const liveVideos: LiveVideoOption[] = useMemo(
@@ -45,6 +45,7 @@ const App: FC = () => {
       channels.flatMap((channel) =>
         channel.liveVideos.map((video, index) => ({
           videoId: video.videoId,
+          channelId: channel.channelId,
           channelTitle: channel.title,
           videoTitle: video.title,
           label: `${channel.title} - ${video.title || `Live #${index + 1}`}`,
@@ -59,23 +60,28 @@ const App: FC = () => {
     unmuteSingleVideo,
     smartSyncPlayers,
     analyzeAndRecoverPlayers,
-  } = useYoutubePlayers(activeAudioVideoId);
+  } = useYoutubePlayers(activeAudioChannelId);
+
+  const selectedChannelId = useMemo(() => {
+    const selected = liveVideos.find((video) => video.videoId === selectedVideoId);
+    return selected?.channelId || '';
+  }, [selectedVideoId, liveVideos]);
 
   useEffect(() => {
-    const storedAudioVideo = localStorage.getItem(ACTIVE_AUDIO_VIDEO_KEY);
-    if (storedAudioVideo) setActiveAudioVideoId(storedAudioVideo);
+    const storedAudioChannel = localStorage.getItem(ACTIVE_AUDIO_CHANNEL_KEY);
+    if (storedAudioChannel) setActiveAudioChannelId(storedAudioChannel);
   }, []);
 
   useEffect(() => {
-    if (activeAudioVideoId) {
-      localStorage.setItem(ACTIVE_AUDIO_VIDEO_KEY, activeAudioVideoId);
+    if (activeAudioChannelId) {
+      localStorage.setItem(ACTIVE_AUDIO_CHANNEL_KEY, activeAudioChannelId);
     }
-  }, [activeAudioVideoId]);
+  }, [activeAudioChannelId]);
 
   useEffect(() => {
     if (!liveVideos.length) {
       setSelectedVideoId('');
-      setActiveAudioVideoId('');
+      setActiveAudioChannelId('');
       return;
     }
 
@@ -83,10 +89,11 @@ const App: FC = () => {
       setSelectedVideoId(liveVideos[0].videoId);
     }
 
-    if (!activeAudioVideoId || !liveVideos.some((video) => video.videoId === activeAudioVideoId)) {
-      setActiveAudioVideoId(liveVideos[0].videoId);
+    if (!activeAudioChannelId) {
+      const firstChannelId = channels.find((channel) => channel.liveVideos.length > 0)?.channelId || '';
+      if (firstChannelId) setActiveAudioChannelId(firstChannelId);
     }
-  }, [liveVideos, selectedVideoId, activeAudioVideoId]);
+  }, [liveVideos, selectedVideoId, activeAudioChannelId, channels]);
 
   useEffect(() => {
     const onEscape = (event: KeyboardEvent) => {
@@ -104,14 +111,8 @@ const App: FC = () => {
       if (isRunning) return;
       isRunning = true;
       try {
-        const { recoveredIds } = await analyzeAndRecoverPlayers();
+        await analyzeAndRecoverPlayers();
         if (isCancelled) return;
-
-        if (recoveredIds.length > 0) {
-          const timestamp = new Date().toLocaleTimeString();
-          const eventText = `${timestamp}: Auto-recovered ${recoveredIds.length} stalled stream(s).`;
-          setHealthEvents((prev) => [eventText, ...prev].slice(0, 5));
-        }
       } finally {
         isRunning = false;
       }
@@ -212,6 +213,17 @@ const App: FC = () => {
       const storedChannels = localStorage.getItem('channels');
       if (storedChannels) {
         setChannels(normalizeChannels(JSON.parse(storedChannels)));
+        // One-shot background refresh to replace stale videoIds from previous sessions.
+        const lastBootSyncRaw = localStorage.getItem(CHANNELS_SYNCED_ON_BOOT_KEY);
+        const lastBootSync = lastBootSyncRaw ? Number(lastBootSyncRaw) : 0;
+        const now = Date.now();
+        const twelveHours = 12 * 60 * 60 * 1000;
+        if (!lastBootSync || now - lastBootSync > twelveHours) {
+          localStorage.setItem(CHANNELS_SYNCED_ON_BOOT_KEY, String(now));
+          window.setTimeout(() => {
+            void forceRefresh(key);
+          }, 1200);
+        }
       } else {
         await forceRefresh(key);
       }
@@ -239,9 +251,9 @@ const App: FC = () => {
   }, []);
 
   const handleUnmuteSelected = () => {
-    if (!selectedVideoId) return;
-    setActiveAudioVideoId(selectedVideoId);
-    unmuteSingleVideo(selectedVideoId);
+    if (!selectedChannelId) return;
+    setActiveAudioChannelId(selectedChannelId);
+    unmuteSingleVideo(selectedChannelId);
   };
 
   const handleSmartSync = async () => {
@@ -305,13 +317,12 @@ const App: FC = () => {
         selectedVideoId={selectedVideoId}
         setSelectedVideoId={setSelectedVideoId}
         onAllAction={controlAllVideos}
-        onSingleAction={controlSingleVideo}
+        onSingleAction={(action) => controlSingleVideo(action, selectedChannelId)}
         onUnmuteSelected={handleUnmuteSelected}
         onRefresh={() => apiKey && forceRefresh(apiKey)}
         onSmartSync={handleSmartSync}
         isSmartSyncRunning={isSmartSyncRunning}
         lastSmartSyncSummary={lastSmartSyncSummary}
-        healthEvents={healthEvents}
       />
     </>
   );

@@ -170,10 +170,6 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
-.healthSection {
-  align-items: flex-start;
-}
-
 .menuSectionTitle {
   font-size: 0.78rem;
   letter-spacing: 0.05em;
@@ -181,6 +177,19 @@
   text-transform: uppercase;
   font-weight: 700;
   margin-right: 0.2rem;
+}
+
+.singleVideoControls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.singleVideoActions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .menuSyncMeta {
