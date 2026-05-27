@@ -10,6 +10,8 @@ interface ControlMenuProps {
   onAllAction: (action: string) => void;
   onSingleAction: (action: string) => void;
   onUnmuteSelected: () => void;
+  isFocusMode: boolean;
+  onToggleFocusMode: () => void;
   onRefresh: () => void;
   onSmartSync: () => void;
   isSmartSyncRunning: boolean;
@@ -25,6 +27,8 @@ export const ControlMenu: FC<ControlMenuProps> = ({
   onAllAction,
   onSingleAction,
   onUnmuteSelected,
+  isFocusMode,
+  onToggleFocusMode,
   onRefresh,
   onSmartSync,
   isSmartSyncRunning,
@@ -79,6 +83,9 @@ export const ControlMenu: FC<ControlMenuProps> = ({
               </button>
               <button onClick={onUnmuteSelected} disabled={!selectedVideoId}>
                 Unmute
+              </button>
+              <button onClick={onToggleFocusMode} disabled={!selectedVideoId}>
+                {isFocusMode ? 'Exit Focus View' : 'Focus View'}
               </button>
             </div>
           </div>

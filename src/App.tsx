@@ -7,6 +7,7 @@ import { useYoutubePlayers } from './hooks/useYoutubePlayers';
 
 const ACTIVE_AUDIO_CHANNEL_KEY = 'activeAudioChannelId';
 const CHANNELS_SYNCED_ON_BOOT_KEY = 'channelsSyncedOnBootAt';
+const PLAYER_ERROR_CODES = new Set([2, 5, 100, 101, 150]);
 
 const normalizeChannels = (raw: any): Channel[] => {
   if (!Array.isArray(raw)) return initialChannels;
@@ -33,6 +34,7 @@ const App: FC = () => {
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [apiKeyError, setApiKeyError] = useState<string | null>(null);
   const [isMenuPinned, setIsMenuPinned] = useState(false);
+  const [isFocusMode, setIsFocusMode] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [selectedVideoId, setSelectedVideoId] = useState('');
   const [activeAudioChannelId, setActiveAudioChannelId] = useState('');
@@ -102,6 +104,46 @@ const App: FC = () => {
     window.addEventListener('keydown', onEscape);
     return () => window.removeEventListener('keydown', onEscape);
   }, []);
+
+  useEffect(() => {
+    const recentErrors = new Map<string, number>();
+    const dedupeMs = 15000;
+
+    const onPlayerMessage = (event: MessageEvent) => {
+      let payload: any = event.data;
+      if (typeof payload === 'string') {
+        try {
+          payload = JSON.parse(payload);
+        } catch {
+          return;
+        }
+      }
+
+      if (!payload || payload.event !== 'onError') return;
+      const code = Number(payload.info);
+      if (!PLAYER_ERROR_CODES.has(code)) return;
+
+      const iframe = Array.from(document.querySelectorAll<HTMLIFrameElement>('iframe.myVideo')).find(
+        (item) => item.contentWindow === event.source
+      );
+      const channelId = iframe?.dataset.channelId || 'unknown-channel';
+      const channelTitle =
+        channels.find((channel) => channel.channelId === channelId)?.title || channelId;
+
+      const errorKey = `${channelId}:${code}`;
+      const now = Date.now();
+      const previousTs = recentErrors.get(errorKey) || 0;
+      if (now - previousTs < dedupeMs) return;
+      recentErrors.set(errorKey, now);
+
+      console.warn(
+        `[YouTube Player Error] channel="${channelTitle}" channelId="${channelId}" code=${code}`
+      );
+    };
+
+    window.addEventListener('message', onPlayerMessage);
+    return () => window.removeEventListener('message', onPlayerMessage);
+  }, [channels]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -308,7 +350,11 @@ const App: FC = () => {
 
       {statusMessage && <div className="toast">{statusMessage}</div>}
 
-      <VideoGrid channels={channels} />
+      <VideoGrid
+        channels={channels}
+        isFocusMode={isFocusMode}
+        focusChannelId={selectedChannelId}
+      />
 
       <ControlMenu
         isMenuPinned={isMenuPinned}
@@ -319,6 +365,8 @@ const App: FC = () => {
         onAllAction={controlAllVideos}
         onSingleAction={(action) => controlSingleVideo(action, selectedChannelId)}
         onUnmuteSelected={handleUnmuteSelected}
+        isFocusMode={isFocusMode}
+        onToggleFocusMode={() => setIsFocusMode((prev) => !prev)}
         onRefresh={() => apiKey && forceRefresh(apiKey)}
         onSmartSync={handleSmartSync}
         isSmartSyncRunning={isSmartSyncRunning}
