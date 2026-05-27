@@ -19,8 +19,27 @@
   gap: 0.45rem;
 }
 
+.focusTop {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 0.45rem;
+  min-height: 0;
+}
+
+.focusSideColumn {
+  display: grid;
+  grid-auto-rows: minmax(120px, 1fr);
+  gap: 0.45rem;
+  align-content: start;
+}
+
+.focusSideTile {
+  position: relative;
+}
+
 .focusMain {
   position: relative;
+  min-height: 0;
 }
 
 .focusMiniStrip {
@@ -340,6 +359,14 @@
 
   .focusLayout {
     grid-template-rows: minmax(0, 1fr) 120px;
+  }
+
+  .focusTop {
+    grid-template-columns: 150px minmax(0, 1fr);
+  }
+
+  .focusSideColumn {
+    grid-auto-rows: minmax(85px, 1fr);
   }
 
   .focusMiniStrip {

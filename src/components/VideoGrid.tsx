@@ -14,6 +14,9 @@ export const VideoGrid: FC<VideoGridProps> = ({ channels, isFocusMode, focusChan
   const miniChannels = channelsWithLive.filter(
     (channel) => channel.channelId !== fallbackFocusedChannel?.channelId
   );
+  const sideMiniLimit = 4;
+  const sideMiniChannels = miniChannels.slice(0, sideMiniLimit);
+  const overflowMiniChannels = miniChannels.slice(sideMiniLimit);
 
   if (isFocusMode && fallbackFocusedChannel) {
     const focusedLive = fallbackFocusedChannel.liveVideos[0];
@@ -21,39 +24,63 @@ export const VideoGrid: FC<VideoGridProps> = ({ channels, isFocusMode, focusChan
 
     return (
       <div className="focusLayout">
-        <div className="focusMain">
-          <iframe
-            key={focusedLive.videoId}
-            className="myVideo"
-            data-channel-id={fallbackFocusedChannel.channelId}
-            src={`https://www.youtube.com/embed/${focusedLive.videoId}?mute=1&enablejsapi=1&autoplay=1&playsinline=1`}
-            title={`${fallbackFocusedChannel.title} live`}
-            frameBorder="0"
-            allowFullScreen
-          />
-          <div className="focusLabel">{fallbackFocusedChannel.title}</div>
+        <div className="focusTop">
+          <div className="focusSideColumn">
+            {sideMiniChannels.map((channel) => {
+              const primaryLive = channel.liveVideos[0];
+              if (!primaryLive) return null;
+
+              return (
+                <div key={channel.channelId} className="focusSideTile">
+                  <iframe
+                    className="myVideo"
+                    data-channel-id={channel.channelId}
+                    src={`https://www.youtube.com/embed/${primaryLive.videoId}?mute=1&enablejsapi=1&autoplay=1&playsinline=1`}
+                    title={`${channel.title} live`}
+                    frameBorder="0"
+                    allowFullScreen
+                  />
+                  <div className="focusMiniLabel">{channel.title}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="focusMain">
+            <iframe
+              key={focusedLive.videoId}
+              className="myVideo"
+              data-channel-id={fallbackFocusedChannel.channelId}
+              src={`https://www.youtube.com/embed/${focusedLive.videoId}?mute=1&enablejsapi=1&autoplay=1&playsinline=1`}
+              title={`${fallbackFocusedChannel.title} live`}
+              frameBorder="0"
+              allowFullScreen
+            />
+            <div className="focusLabel">{fallbackFocusedChannel.title}</div>
+          </div>
         </div>
 
-        <div className="focusMiniStrip">
-          {miniChannels.map((channel) => {
-            const primaryLive = channel.liveVideos[0];
-            if (!primaryLive) return null;
+        {overflowMiniChannels.length > 0 && (
+          <div className="focusMiniStrip">
+            {overflowMiniChannels.map((channel) => {
+              const primaryLive = channel.liveVideos[0];
+              if (!primaryLive) return null;
 
-            return (
-              <div key={channel.channelId} className="focusMiniTile">
-                <iframe
-                  className="myVideo"
-                  data-channel-id={channel.channelId}
-                  src={`https://www.youtube.com/embed/${primaryLive.videoId}?mute=1&enablejsapi=1&autoplay=1&playsinline=1`}
-                  title={`${channel.title} live`}
-                  frameBorder="0"
-                  allowFullScreen
-                />
-                <div className="focusMiniLabel">{channel.title}</div>
-              </div>
-            );
-          })}
-        </div>
+              return (
+                <div key={channel.channelId} className="focusMiniTile">
+                  <iframe
+                    className="myVideo"
+                    data-channel-id={channel.channelId}
+                    src={`https://www.youtube.com/embed/${primaryLive.videoId}?mute=1&enablejsapi=1&autoplay=1&playsinline=1`}
+                    title={`${channel.title} live`}
+                    frameBorder="0"
+                    allowFullScreen
+                  />
+                  <div className="focusMiniLabel">{channel.title}</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
