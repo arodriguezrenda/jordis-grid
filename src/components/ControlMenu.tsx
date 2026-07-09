@@ -4,6 +4,8 @@ import type { LiveVideoOption } from '../model';
 interface ControlMenuProps {
   isMenuPinned: boolean;
   setIsMenuPinned: Dispatch<SetStateAction<boolean>>;
+  isMenuClosed: boolean;
+  setIsMenuClosed: Dispatch<SetStateAction<boolean>>;
   liveVideos: LiveVideoOption[];
   selectedVideoId: string;
   setSelectedVideoId: Dispatch<SetStateAction<string>>;
@@ -21,6 +23,8 @@ interface ControlMenuProps {
 export const ControlMenu: FC<ControlMenuProps> = ({
   isMenuPinned,
   setIsMenuPinned,
+  isMenuClosed,
+  setIsMenuClosed,
   liveVideos,
   selectedVideoId,
   setSelectedVideoId,
@@ -34,16 +38,32 @@ export const ControlMenu: FC<ControlMenuProps> = ({
   isSmartSyncRunning,
   lastSmartSyncSummary,
 }) => {
+  const handleToggleMenu = () => {
+    setIsMenuClosed(false);
+    setIsMenuPinned((prev) => !prev);
+  };
+
+  const handleCloseMenu = () => {
+    setIsMenuPinned(false);
+    setIsMenuClosed(true);
+  };
+
   return (
-    <div className={`compactMenuWrapper ${isMenuPinned ? 'pinned' : ''}`}>
+    <div className={`compactMenuWrapper ${isMenuPinned ? 'pinned' : ''} ${isMenuClosed ? 'closed' : ''}`}>
       <button
         className="compactMenuHandle"
         type="button"
-        aria-label={isMenuPinned ? 'Unpin menu' : 'Pin menu'}
-        aria-expanded={isMenuPinned}
-        onClick={() => setIsMenuPinned((prev) => !prev)}
+        aria-label={isMenuClosed ? 'Open menu' : isMenuPinned ? 'Unpin menu' : 'Pin menu'}
+        aria-expanded={isMenuPinned && !isMenuClosed}
+        onClick={handleToggleMenu}
       />
       <div className="compactMenu" role="menu" aria-label="Video controls menu">
+        <div className="compactMenuTopbar">
+          <span className="compactMenuTitle">Controls</span>
+          <button className="compactMenuClose" type="button" aria-label="Close menu" onClick={handleCloseMenu}>
+            X
+          </button>
+        </div>
         <div className="menuSection">
           <span className="menuSectionTitle">All Videos</span>
           <button onClick={() => onAllAction('playVideo')}>Play</button>
@@ -92,7 +112,12 @@ export const ControlMenu: FC<ControlMenuProps> = ({
         </div>
         <div className="menuSection">
           <span className="menuSectionTitle">View</span>
-          <button onClick={() => setIsMenuPinned((prev) => !prev)}>
+          <button
+            onClick={() => {
+              setIsMenuClosed(false);
+              setIsMenuPinned((prev) => !prev);
+            }}
+          >
             {isMenuPinned ? 'Unpin Menu' : 'Pin Menu'}
           </button>
         </div>

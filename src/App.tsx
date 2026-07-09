@@ -34,6 +34,7 @@ const App: FC = () => {
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [apiKeyError, setApiKeyError] = useState<string | null>(null);
   const [isMenuPinned, setIsMenuPinned] = useState(false);
+  const [isMenuClosed, setIsMenuClosed] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [selectedVideoId, setSelectedVideoId] = useState('');
@@ -99,7 +100,10 @@ const App: FC = () => {
 
   useEffect(() => {
     const onEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsMenuPinned(false);
+      if (event.key === 'Escape') {
+        setIsMenuPinned(false);
+        setIsMenuClosed(true);
+      }
     };
     window.addEventListener('keydown', onEscape);
     return () => window.removeEventListener('keydown', onEscape);
@@ -359,6 +363,8 @@ const App: FC = () => {
       <ControlMenu
         isMenuPinned={isMenuPinned}
         setIsMenuPinned={setIsMenuPinned}
+        isMenuClosed={isMenuClosed}
+        setIsMenuClosed={setIsMenuClosed}
         liveVideos={liveVideos}
         selectedVideoId={selectedVideoId}
         setSelectedVideoId={setSelectedVideoId}

@@ -208,12 +208,39 @@
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.34);
 }
 
-.compactMenuWrapper:hover .compactMenu,
-.compactMenuWrapper:focus-within .compactMenu,
-.compactMenuWrapper.pinned .compactMenu {
+.compactMenuWrapper.closed .compactMenu {
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+}
+
+.compactMenuWrapper:not(.closed):hover .compactMenu,
+.compactMenuWrapper:not(.closed):focus-within .compactMenu,
+.compactMenuWrapper.pinned:not(.closed) .compactMenu {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
+}
+
+.compactMenuTopbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.compactMenuTitle {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  opacity: 0.82;
+}
+
+.compactMenuClose {
+  min-width: 32px;
+  padding: 0.2rem 0.55rem;
+  line-height: 1;
 }
 
 .menuSection {
