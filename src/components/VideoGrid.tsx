@@ -90,13 +90,10 @@ export const VideoGrid: FC<VideoGridProps> = ({ channels, isFocusMode, focusChan
       {channels.map((channel) =>
         channel.liveVideos.length === 0 ? (
           <div key={channel.channelId} className="channelFallback">
-            <img
-              className="myVideo"
-              src={channel.thumbnail}
-              alt={channel.title}
-              style={{ width: '100%', height: '100%' }}
-            />
-            <div className="channelLabel">{channel.title}</div>
+            <div className="channelFallbackContent">
+              <div className="channelFallbackTitle">{channel.title}</div>
+              <div className="channelFallbackStatus">No live stream</div>
+            </div>
           </div>
         ) : (
           (() => {

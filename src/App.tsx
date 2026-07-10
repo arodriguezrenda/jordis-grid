@@ -57,6 +57,16 @@ const App: FC = () => {
     [channels]
   );
 
+  const orderedChannels = useMemo(() => {
+    return [...channels].sort((left, right) => {
+      const leftHasLive = left.liveVideos.length > 0;
+      const rightHasLive = right.liveVideos.length > 0;
+
+      if (leftHasLive === rightHasLive) return 0;
+      return leftHasLive ? -1 : 1;
+    });
+  }, [channels]);
+
   const {
     controlAllVideos,
     controlSingleVideo,
@@ -355,7 +365,7 @@ const App: FC = () => {
       {statusMessage && <div className="toast">{statusMessage}</div>}
 
       <VideoGrid
-        channels={channels}
+        channels={orderedChannels}
         isFocusMode={isFocusMode}
         focusChannelId={selectedChannelId}
       />
