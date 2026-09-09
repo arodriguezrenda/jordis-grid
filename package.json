@@ -33,7 +33,10 @@
     "vite": "^7.3.6"
   },
   "overrides": {
-    "js-yaml": "4.3.1",
+    "js-yaml": "4.3.2",
+    "@humanfs/node": "0.16.8",
+    "baseline-browser-mapping": "2.11.0",
+    "browserslist": "4.28.7",
     "postcss": "8.5.23",
     "rollup": "4.60.0",
     "flatted": "3.4.2",
