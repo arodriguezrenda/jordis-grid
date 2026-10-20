@@ -1,13 +1,16 @@
 import { type FC } from 'react';
 import type { Channel } from '../model';
+import { MUSIC_CHANNEL_ID, type MusicSource } from '../music';
+import { MusicPlayer } from './MusicPlayer';
 
 interface VideoGridProps {
   channels: Channel[];
+  musicSource: MusicSource;
   isFocusMode: boolean;
   focusChannelId: string;
 }
 
-export const VideoGrid: FC<VideoGridProps> = ({ channels, isFocusMode, focusChannelId }) => {
+export const VideoGrid: FC<VideoGridProps> = ({ channels, isFocusMode, focusChannelId, musicSource }) => {
   const channelsWithLive = channels.filter((channel) => channel.liveVideos.length > 0);
   const focusedChannel = channelsWithLive.find((channel) => channel.channelId === focusChannelId);
   const fallbackFocusedChannel = focusedChannel || channelsWithLive[0];
@@ -32,21 +35,21 @@ export const VideoGrid: FC<VideoGridProps> = ({ channels, isFocusMode, focusChan
 
               return (
                 <div key={channel.channelId} className="focusSideTile">
-                  <iframe
+                  {channel.channelId === MUSIC_CHANNEL_ID ? <MusicPlayer source={musicSource} /> : (<iframe
                     className="myVideo"
                     data-channel-id={channel.channelId}
                     src={`https://www.youtube.com/embed/${primaryLive.videoId}?mute=1&enablejsapi=1&autoplay=1&playsinline=1`}
                     title={`${channel.title} live`}
                     frameBorder="0"
                     allowFullScreen
-                  />
+                  />)}
                   <div className="focusMiniLabel">{channel.title}</div>
                 </div>
               );
             })}
           </div>
           <div className="focusMain">
-            <iframe
+            {fallbackFocusedChannel.channelId === MUSIC_CHANNEL_ID ? <MusicPlayer source={musicSource} /> : (<iframe
               key={focusedLive.videoId}
               className="myVideo"
               data-channel-id={fallbackFocusedChannel.channelId}
@@ -54,7 +57,7 @@ export const VideoGrid: FC<VideoGridProps> = ({ channels, isFocusMode, focusChan
               title={`${fallbackFocusedChannel.title} live`}
               frameBorder="0"
               allowFullScreen
-            />
+            />)}
             <div className="focusLabel">{fallbackFocusedChannel.title}</div>
           </div>
         </div>
@@ -67,14 +70,14 @@ export const VideoGrid: FC<VideoGridProps> = ({ channels, isFocusMode, focusChan
 
               return (
                 <div key={channel.channelId} className="focusMiniTile">
-                  <iframe
+                  {channel.channelId === MUSIC_CHANNEL_ID ? <MusicPlayer source={musicSource} /> : (<iframe
                     className="myVideo"
                     data-channel-id={channel.channelId}
                     src={`https://www.youtube.com/embed/${primaryLive.videoId}?mute=1&enablejsapi=1&autoplay=1&playsinline=1`}
                     title={`${channel.title} live`}
                     frameBorder="0"
                     allowFullScreen
-                  />
+                  />)}
                   <div className="focusMiniLabel">{channel.title}</div>
                 </div>
               );
@@ -100,7 +103,7 @@ export const VideoGrid: FC<VideoGridProps> = ({ channels, isFocusMode, focusChan
             const primaryLive = channel.liveVideos[0];
             if (!primaryLive) return null;
             return (
-          <iframe
+          channel.channelId === MUSIC_CHANNEL_ID ? <MusicPlayer key={channel.channelId} source={musicSource} /> : (<iframe
             key={primaryLive.videoId}
             className="myVideo"
             data-channel-id={channel.channelId}
@@ -108,7 +111,7 @@ export const VideoGrid: FC<VideoGridProps> = ({ channels, isFocusMode, focusChan
             title={`${channel.title} live`}
             frameBorder="0"
             allowFullScreen
-          />
+          />)
             );
           })()
         )

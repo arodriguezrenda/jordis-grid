@@ -1,5 +1,14 @@
 import { type FC, useEffect, useMemo, useState } from 'react';
 import './App.css';
+import {
+  DEFAULT_MUSIC_PLAYLIST_ID,
+  DEFAULT_MUSIC_PLAYLIST_VIDEO_IDS,
+  musicChannel,
+  MUSIC_STORAGE_KEY,
+  readMusicSource,
+  type MusicSource,
+} from './music';
+import { MusicSettings } from './components/MusicSettings';
 import { ControlMenu } from './components/ControlMenu';
 import { VideoGrid } from './components/VideoGrid';
 import { initialChannels, type Channel, type LiveVideoOption } from './model';
@@ -8,6 +17,40 @@ import { useYoutubePlayers } from './hooks/useYoutubePlayers';
 const ACTIVE_AUDIO_CHANNEL_KEY = 'activeAudioChannelId';
 const CHANNELS_SYNCED_ON_BOOT_KEY = 'channelsSyncedOnBootAt';
 const PLAYER_ERROR_CODES = new Set([2, 5, 100, 101, 150]);
+const playlistCacheKey = (playlistId: string) => `musicPlaylistCache:${playlistId}`;
+
+const fetchPlaylistVideoIds = async (playlistId: string, key: string): Promise<string[]> => {
+  const ids: string[] = [];
+  let pageToken = '';
+  do {
+    const params = new URLSearchParams({ part: 'contentDetails', maxResults: '50', playlistId, key });
+    if (pageToken) params.set('pageToken', pageToken);
+    const response = await fetch(`https://youtube.googleapis.com/youtube/v3/playlistItems?${params}`, { cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || data?.error) throw new Error(data?.error?.message || 'No se pudo leer la playlist de YouTube.');
+    for (const item of data.items || []) {
+      const videoId = item?.contentDetails?.videoId;
+      if (typeof videoId === 'string' && !ids.includes(videoId)) ids.push(videoId);
+    }
+    pageToken = typeof data.nextPageToken === 'string' ? data.nextPageToken : '';
+  } while (pageToken);
+
+  const embeddableIds: string[] = [];
+  for (let start = 0; start < ids.length; start += 50) {
+    const chunk = ids.slice(start, start + 50);
+    const params = new URLSearchParams({ part: 'status', id: chunk.join(','), key });
+    const response = await fetch(`https://youtube.googleapis.com/youtube/v3/videos?${params}`, { cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || data?.error) throw new Error(data?.error?.message || 'No se pudo validar la playlist de YouTube.');
+    const allowed = new Set<string>(
+      (data.items || [])
+        .filter((item: any) => item?.status?.embeddable !== false && item?.status?.privacyStatus === 'public')
+        .map((item: any) => String(item.id))
+    );
+    embeddableIds.push(...chunk.filter((id) => allowed.has(id)));
+  }
+  return embeddableIds;
+};
 
 const normalizeChannels = (raw: any): Channel[] => {
   if (!Array.isArray(raw)) return initialChannels;
@@ -43,9 +86,52 @@ const App: FC = () => {
   const [isSmartSyncRunning, setIsSmartSyncRunning] = useState(false);
   const [channels, setChannels] = useState<Channel[]>(initialChannels);
 
+  const [musicSource, setMusicSource] = useState(readMusicSource);
+  const [resolvedPlaylistVideos, setResolvedPlaylistVideos] = useState<string[]>(() =>
+    musicSource.kind === 'playlist' && musicSource.playlistId === DEFAULT_MUSIC_PLAYLIST_ID
+      ? DEFAULT_MUSIC_PLAYLIST_VIDEO_IDS
+      : []
+  );
+  const availableChannels = useMemo(() => [...channels, musicChannel], [channels]);
+  const playbackMusicSource: MusicSource = useMemo(
+    () => musicSource.kind === 'playlist' && resolvedPlaylistVideos.length
+      ? { kind: 'videos', videoIds: resolvedPlaylistVideos }
+      : musicSource,
+    [musicSource, resolvedPlaylistVideos]
+  );
+
+  useEffect(() => {
+    if (musicSource.kind !== 'playlist') {
+      setResolvedPlaylistVideos([]);
+      return;
+    }
+    let cancelled = false;
+    const builtIn = musicSource.playlistId === DEFAULT_MUSIC_PLAYLIST_ID
+      ? DEFAULT_MUSIC_PLAYLIST_VIDEO_IDS
+      : [];
+    try {
+      const cached = JSON.parse(localStorage.getItem(playlistCacheKey(musicSource.playlistId)) || 'null');
+      const validCache = Array.isArray(cached)
+        ? cached.filter((id): id is string => typeof id === 'string' && /^[\w-]{11}$/.test(id))
+        : [];
+      setResolvedPlaylistVideos(validCache.length ? validCache : builtIn);
+    } catch {
+      setResolvedPlaylistVideos(builtIn);
+    }
+    if (!apiKey) return () => { cancelled = true; };
+    void fetchPlaylistVideoIds(musicSource.playlistId, apiKey).then((ids) => {
+      if (cancelled || !ids.length) return;
+      setResolvedPlaylistVideos(ids);
+      localStorage.setItem(playlistCacheKey(musicSource.playlistId), JSON.stringify(ids));
+    }).catch((error: Error) => {
+      if (!cancelled && !builtIn.length) setStatusMessage(error.message);
+    });
+    return () => { cancelled = true; };
+  }, [musicSource, apiKey]);
+
   const liveVideos: LiveVideoOption[] = useMemo(
     () =>
-      channels.flatMap((channel) =>
+      availableChannels.flatMap((channel) =>
         channel.liveVideos.map((video, index) => ({
           videoId: video.videoId,
           channelId: channel.channelId,
@@ -54,18 +140,18 @@ const App: FC = () => {
           label: `${channel.title} - ${video.title || `Live #${index + 1}`}`,
         }))
       ),
-    [channels]
+    [availableChannels]
   );
 
   const orderedChannels = useMemo(() => {
-    return [...channels].sort((left, right) => {
+    return [...availableChannels].sort((left, right) => {
       const leftHasLive = left.liveVideos.length > 0;
       const rightHasLive = right.liveVideos.length > 0;
 
       if (leftHasLive === rightHasLive) return 0;
       return leftHasLive ? -1 : 1;
     });
-  }, [channels]);
+  }, [availableChannels]);
 
   const {
     controlAllVideos,
@@ -349,6 +435,7 @@ const App: FC = () => {
           </label>
           {apiKeyError && <p className="apiError">{apiKeyError}</p>}
           <button type="submit">Save</button>
+          <button type="button" onClick={() => setShowApiKeyForm(false)}>Continuar solo con Música</button>
         </form>
       </div>
     );
@@ -366,11 +453,20 @@ const App: FC = () => {
 
       <VideoGrid
         channels={orderedChannels}
+        musicSource={playbackMusicSource}
         isFocusMode={isFocusMode}
         focusChannelId={selectedChannelId}
       />
 
       <ControlMenu
+        musicSettings={<MusicSettings source={musicSource} onSave={(source) => {
+          try {
+            localStorage.setItem(MUSIC_STORAGE_KEY, JSON.stringify(source));
+            setMusicSource(source);
+          } catch {
+            setStatusMessage('No se pudo guardar la playlist en este navegador.');
+          }
+        }} />}
         isMenuPinned={isMenuPinned}
         setIsMenuPinned={setIsMenuPinned}
         isMenuClosed={isMenuClosed}
@@ -383,7 +479,7 @@ const App: FC = () => {
         onUnmuteSelected={handleUnmuteSelected}
         isFocusMode={isFocusMode}
         onToggleFocusMode={() => setIsFocusMode((prev) => !prev)}
-        onRefresh={() => apiKey && forceRefresh(apiKey)}
+        onRefresh={() => apiKey ? void forceRefresh(apiKey) : setShowApiKeyForm(true)}
         onSmartSync={handleSmartSync}
         isSmartSyncRunning={isSmartSyncRunning}
         lastSmartSyncSummary={lastSmartSyncSummary}
