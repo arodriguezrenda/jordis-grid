@@ -122,7 +122,7 @@ export const useYoutubePlayers = (activeAudioChannelId: string) => {
     const allIframes = Array.from(document.querySelectorAll<HTMLIFrameElement>('iframe.myVideo'));
     const candidates = allIframes.filter((iframe) => {
       const channelId = iframe.dataset.channelId;
-      return Boolean(channelId && channelId !== activeAudioChannelId);
+      return Boolean(channelId && channelId !== activeAudioChannelId && iframe.dataset.playbackKind !== 'playlist');
     });
 
     if (!candidates.length) return { updated: 0, total: 0 };

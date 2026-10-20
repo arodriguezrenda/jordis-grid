@@ -1,7 +1,8 @@
-import type { Dispatch, FC, SetStateAction } from 'react';
+import type { Dispatch, FC, SetStateAction, ReactNode } from 'react';
 import type { LiveVideoOption } from '../model';
 
 interface ControlMenuProps {
+  musicSettings: ReactNode;
   isMenuPinned: boolean;
   setIsMenuPinned: Dispatch<SetStateAction<boolean>>;
   isMenuClosed: boolean;
@@ -21,6 +22,7 @@ interface ControlMenuProps {
 }
 
 export const ControlMenu: FC<ControlMenuProps> = ({
+  musicSettings,
   isMenuPinned,
   setIsMenuPinned,
   isMenuClosed,
@@ -110,6 +112,7 @@ export const ControlMenu: FC<ControlMenuProps> = ({
             </div>
           </div>
         </div>
+        {musicSettings}
         <div className="menuSection">
           <span className="menuSectionTitle">View</span>
           <button
