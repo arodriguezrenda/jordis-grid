@@ -32,7 +32,7 @@ function loadAPI(): Promise<YoutubeAPI> {
   if (scope.YT?.Player) return Promise.resolve(scope.YT);
   if (!apiPromise) apiPromise = new Promise((resolve, reject) => {
     const previous = scope.onYouTubeIframeAPIReady;
-    const timer = window.setTimeout(() => reject(new Error('YouTube no respondió. Recargá la página.')), 20000);
+    const timer = window.setTimeout(() => reject(new Error('YouTube did not respond. Reload the page.')), 20000);
     scope.onYouTubeIframeAPIReady = () => {
       window.clearTimeout(timer);
       previous?.();
@@ -40,7 +40,7 @@ function loadAPI(): Promise<YoutubeAPI> {
     };
     const script = document.createElement('script');
     script.src = 'https://www.youtube.com/iframe_api';
-    script.onerror = () => { window.clearTimeout(timer); reject(new Error('No se pudo cargar YouTube.')); };
+    script.onerror = () => { window.clearTimeout(timer); reject(new Error('Could not load YouTube.')); };
     document.head.appendChild(script);
   });
   return apiPromise;
@@ -107,7 +107,7 @@ export function MusicPlayer({ source }: { source: MusicSource }) {
             iframe.className = 'myVideo';
             iframe.dataset.channelId = MUSIC_CHANNEL_ID;
             iframe.dataset.playbackKind = 'playlist';
-            iframe.title = 'Música — videoclips sin fin';
+            iframe.title = 'Music — endless music videos';
             iframe.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture';
             target.mute();
             if (source.kind === 'playlist') {
@@ -127,23 +127,23 @@ export function MusicPlayer({ source }: { source: MusicSource }) {
           onError: ({ target, data }) => {
             if (cancelled) return;
             if (![2, 5, 100, 101, 150].includes(data)) {
-              setMessage('YouTube no pudo reproducir el video. Probá Siguiente o recargá la página.');
+              setMessage('YouTube could not play this video. Try Next or reload the page.');
               return;
             }
             if (source.kind === 'playlist') {
-              setMessage('Video no disponible. Pasando al siguiente…');
+              setMessage('Video unavailable. Skipping to the next one…');
               skipTimer = window.setTimeout(() => target.nextVideo(), 1000);
               return;
             }
             failures += 1;
             if (failures >= source.videoIds.length) {
-              setMessage('No hay videos disponibles. Editá la lista o probá Siguiente.');
+              setMessage('No videos are available. Edit the list or try Next.');
               return;
             }
-            setMessage('Video no disponible. Pasando al siguiente…');
+            setMessage('Video unavailable. Skipping to the next one…');
             skipTimer = window.setTimeout(nextManualVideo, 1000);
           },
-          onAutoplayBlocked: () => setMessage('Presioná Play en el video para comenzar.'),
+          onAutoplayBlocked: () => setMessage('Press Play in the video to begin.'),
         },
       });
     }).catch((error: Error) => { if (!cancelled) setMessage(error.message); });
@@ -155,13 +155,13 @@ export function MusicPlayer({ source }: { source: MusicSource }) {
     };
   }, [source]);
 
-  const status = position.total > 0 ? `${position.index + 1}/${position.total}` : 'playlist de YouTube';
+  const status = position.total > 0 ? `${position.index + 1}/${position.total}` : 'YouTube playlist';
   return <div className="musicTile">
     <div className="musicPlayerHost" ref={host} />
     <div className="musicBar">
-      <span>Música · {status} · En bucle</span>
-      {currentVideoId && <a href={`https://www.youtube.com/watch?v=${currentVideoId}`} target="_blank" rel="noreferrer">Ver tema</a>}
-      <button type="button" onClick={() => advance.current()}>Siguiente</button>
+      <span>Music · {status} · Looping</span>
+      {currentVideoId && <a href={`https://www.youtube.com/watch?v=${currentVideoId}`} target="_blank" rel="noreferrer">Open video</a>}
+      <button type="button" onClick={() => advance.current()}>Next</button>
     </div>
     {message && <div className="musicMessage" role="status">{message}</div>}
   </div>;

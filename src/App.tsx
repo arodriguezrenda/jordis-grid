@@ -27,7 +27,7 @@ const fetchPlaylistVideoIds = async (playlistId: string, key: string): Promise<s
     if (pageToken) params.set('pageToken', pageToken);
     const response = await fetch(`https://youtube.googleapis.com/youtube/v3/playlistItems?${params}`, { cache: 'no-store' });
     const data = await response.json();
-    if (!response.ok || data?.error) throw new Error(data?.error?.message || 'No se pudo leer la playlist de YouTube.');
+    if (!response.ok || data?.error) throw new Error(data?.error?.message || 'Could not load the YouTube playlist.');
     for (const item of data.items || []) {
       const videoId = item?.contentDetails?.videoId;
       if (typeof videoId === 'string' && !ids.includes(videoId)) ids.push(videoId);
@@ -41,7 +41,7 @@ const fetchPlaylistVideoIds = async (playlistId: string, key: string): Promise<s
     const params = new URLSearchParams({ part: 'status', id: chunk.join(','), key });
     const response = await fetch(`https://youtube.googleapis.com/youtube/v3/videos?${params}`, { cache: 'no-store' });
     const data = await response.json();
-    if (!response.ok || data?.error) throw new Error(data?.error?.message || 'No se pudo validar la playlist de YouTube.');
+    if (!response.ok || data?.error) throw new Error(data?.error?.message || 'Could not validate the YouTube playlist.');
     const allowed = new Set<string>(
       (data.items || [])
         .filter((item: any) => item?.status?.embeddable !== false && item?.status?.privacyStatus === 'public')
@@ -435,7 +435,7 @@ const App: FC = () => {
           </label>
           {apiKeyError && <p className="apiError">{apiKeyError}</p>}
           <button type="submit">Save</button>
-          <button type="button" onClick={() => setShowApiKeyForm(false)}>Continuar solo con Música</button>
+          <button type="button" onClick={() => setShowApiKeyForm(false)}>Continue with Music only</button>
         </form>
       </div>
     );
@@ -464,7 +464,7 @@ const App: FC = () => {
             localStorage.setItem(MUSIC_STORAGE_KEY, JSON.stringify(source));
             setMusicSource(source);
           } catch {
-            setStatusMessage('No se pudo guardar la playlist en este navegador.');
+            setStatusMessage('Could not save the playlist in this browser.');
           }
         }} />}
         isMenuPinned={isMenuPinned}
