@@ -18,8 +18,8 @@ export type MusicSource =
 
 export const musicChannel: Channel = {
   channelId: MUSIC_CHANNEL_ID,
-  title: 'Música',
-  liveVideos: [{ videoId: MUSIC_SELECTION_ID, title: 'Videoclips sin fin' }],
+  title: 'Music',
+  liveVideos: [{ videoId: MUSIC_SELECTION_ID, title: 'Endless music videos' }],
 };
 
 export function parseMusicVideos(text: string): string[] {
